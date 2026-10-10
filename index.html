@@ -180,7 +180,7 @@
             btn.innerText = "提交報名"; btn.disabled = false;
         }
 
-        async function fetchMyRecords(mode) {
+       async function fetchMyRecords(mode) {
             if (!checkLineStatus()) return; // 沒登入 LINE 就擋下
 
             const selectId = mode === 'upload' ? "myRecordsSelect" : "editRecordsSelect";
@@ -201,14 +201,22 @@
                         select.innerHTML += `<option value='${optionVal}'>${rec.className} - ${rec.name}</option>`;
                     });
                     
+                    // 👇 這裡修復了下拉選單的觸發邏輯 👇
                     select.onchange = function() {
                         if(this.value !== "") {
-                            if(mode === 'upload') document.getElementById("upload-section").style.display = "block";
+                            if(mode === 'upload') {
+                                document.getElementById("upload-section").style.display = "block";
+                            }
+                            if(mode === 'edit') {
+                                loadEditData(); // 呼叫載入資料的函數，並顯示修改區塊
+                            }
                         } else {
                             if(mode === 'upload') document.getElementById("upload-section").style.display = "none";
                             if(mode === 'edit') document.getElementById("edit-section").style.display = "none";
                         }
                     };
+                    // 👆 修復結束 👆
+
                 } else select.innerHTML = '<option value="">找不到紀錄</option>';
             } catch (err) { select.innerHTML = '<option value="">讀取失敗</option>'; }
         }
