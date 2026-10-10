@@ -121,17 +121,26 @@
         let currentLineName = "未登入"; let currentSource = "網頁";
         let loadedRecords = []; // 暫存抓到的紀錄供編輯頁面使用
 
+// 1. 初始化 (抓蟲測試版)
         async function initializeLiff() {
             try {
+                document.getElementById("profileName").innerText = "開始連線 LINE...";
                 await liff.init({ liffId: LIFF_ID });
-                if (!liff.isLoggedIn()) liff.login();
-                else {
+                
+                if (!liff.isLoggedIn()) {
+                    document.getElementById("profileName").innerText = "準備登入...";
+                    liff.login();
+                } else {
                     const profile = await liff.getProfile();
                     currentLineName = profile.displayName;
                     currentSource = liff.getOS();
                     document.getElementById("profileName").innerText = currentLineName;
                 }
-            } catch (err) {}
+            } catch (err) {
+                // 如果失敗，會彈出視窗告訴我們具體原因
+                alert("LIFF 發生錯誤：" + err.message);
+                document.getElementById("profileName").innerText = "連線失敗";
+            }
         }
         initializeLiff();
 
