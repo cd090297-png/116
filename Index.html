@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>活動報名系統</title>
+    <!-- 引入 LINE LIFF SDK -->
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+    <h2>報名表單</h2>
+    <p>你好，<span id="profileName">讀取中...</span></p>
+    
+    <form id="regForm">
+        <label>選擇班別：</label>
+        <select id="classSelect" required>
+            <option value="A">A班 (限量20名)</option>
+            <option value="B">B班 (限量20名)</option>
+            <option value="C">C班 (限量20名)</option>
+            <!-- 依此類推加到H班 -->
+        </select>
+        <br><br>
+        
+        <label>上傳相關圖片：</label>
+        <input type="file" id="imageUpload" accept="image/*">
+        <br><br>
+        
+        <button type="button" onclick="submitForm()">確認報名</button>
+    </form>
+
+    <script>
+        let lineName = "未登入";
+        let lineSource = "網頁";
+
+        // 初始化 LIFF
+        async function initializeLiff() {
+            try {
+                await liff.init({ liffId: "2011959696-d1Lkeojo" }); // <--- 替換你的 LIFF ID
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                } else {
+                    const profile = await liff.getProfile();
+                    lineName = profile.displayName;
+                    lineSource = liff.getOS(); // 可抓取是在 iOS, Android 或 Web 登入
+                    document.getElementById("profileName").innerText = lineName;
+                }
+            } catch (err) {
+                console.error("LIFF 初始化失敗", err);
+            }
+        }
+        initializeLiff();
+
+        // 處理表單送出
+        async function submitForm() {
+            const targetClass = document.getElementById("classSelect").value;
+            const fileInput = document.getElementById("imageUpload");
+            let imageBase64 = "";
+            let fileName = "";
+
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                fileName = file.name;
+                imageBase64 = await toBase64(file);
+            }
+
+            const data = {
+                lineName: lineName,
+                source: lineSource,
+                targetClass: targetClass,
+                imageBase64: imageBase64,
+                fileName: fileName
+            };
+
+            // 呼叫 GAS 後端
+            alert("資料傳送中，請稍候...");
+            fetch("https://script.google.com/macros/s/AKfycbzyLksHBQkGF9e3GrjnZJwEzqKg5F7qU8nb9zdt8xSwIKhQHevccfqt5Uu2PioAAjmK/exec", { // <--- 替換你的 GAS 部署網址
+                method: "POST",
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if(result.success) {
+                    alert("報名成功！");
+                    liff.closeWindow(); // 報名完自動關閉 LINE 視窗
+                } else {
+                    alert(result.message); // 顯示額滿或其他錯誤訊息
+                }
+            })
+            .catch(error => {
+                alert("發生錯誤，請重試！");
+            });
+        }
+
+        // 圖片轉 Base64 函數
+        const toBase64 = file => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+    </script>
+</body>
+</html>
