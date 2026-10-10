@@ -3,45 +3,69 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
-    <title>116開運手鍊報名系統</title>
+    <title>活動報名系統</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
-        :root { --primary: #00B900; --bg: #f4f5f7; --card: #ffffff; --text: #333333; }
+        /* ✨ 護眼深色主題配色 */
+        :root { 
+            --primary: #2EA84B;     /* 柔和的深綠色 */
+            --bg: #18191A;          /* 深色背景 */
+            --card: #242526;        /* 區塊底色 */
+            --text: #E4E6EB;        /* 柔和米白字體 */
+            --text-muted: #B0B3B8;  /* 輔助說明文字 (次要顏色) */
+            --border: #3A3B3C;      /* 分隔線與邊框色 */
+            --input-bg: #3A3B3C;    /* 輸入框底色 */
+        }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 0; padding-bottom: 70px; }
-        .header { background-color: var(--primary); color: white; padding: 15px; text-align: center; font-size: 18px; font-weight: bold; }
-        .container { padding: 15px; }
-        .card { background-color: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 14px; color: #555; }
-        input[type="text"], input[type="number"], select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        button { width: 100%; background-color: var(--primary); color: white; border: none; padding: 14px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        button.btn-secondary { background-color: #6c757d; }
-        button.btn-warning { background-color: #ff9800; }
-        button:disabled { background-color: #cccccc; }
         
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
-        .nav-item { flex: 1; text-align: center; padding: 10px 0; font-size: 12px; color: #888; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
-        .nav-item.active { color: var(--primary); border-top: 3px solid var(--primary); }
+        /* 頂部標題 */
+        .header { background-color: #1e1e1e; color: var(--primary); padding: 15px; text-align: center; font-size: 18px; font-weight: bold; border-bottom: 1px solid var(--border); }
+        
+        .container { padding: 15px; }
+        .card { background-color: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); margin-bottom: 15px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 14px; color: var(--text-muted); }
+        
+        /* 輸入框暗色化 */
+        input[type="text"], input[type="number"], select { 
+            width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; font-size: 16px; 
+            background-color: var(--input-bg); color: var(--text); 
+        }
+        /* 檔案上傳按鈕文字顏色 */
+        input[type="file"] { color: var(--text-muted); }
+        
+        /* 按鈕風格 */
+        button { width: 100%; background-color: var(--primary); color: white; border: none; padding: 14px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button.btn-secondary { background-color: #4E4F50; color: var(--text); }
+        button.btn-warning { background-color: #C27D00; color: white; }
+        button:disabled { background-color: #555555; color: #888888; }
+        
+        /* 底部導覽列暗色化 */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; border-top: 1px solid var(--border); }
+        .nav-item { flex: 1; text-align: center; padding: 10px 0; font-size: 12px; color: var(--text-muted); font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
+        .nav-item.active { color: var(--primary); border-top: 3px solid var(--primary); margin-top: -1px; }
         .nav-icon { font-size: 20px; margin-bottom: 3px; }
         
         .page { display: none; }
         .page.active { display: block; }
+        
+        /* 表格暗色化 */
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background-color: #f8f9fa; }
+        th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+        th { background-color: var(--input-bg); color: var(--text); }
     </style>
 </head>
 <body>
 
-    <div class="header" id="headerTitle">116開運手鍊報名</div>
+    <div class="header" id="headerTitle">活動報名</div>
 
     <div class="container">
         <!-- 【頁面一】報名表單 -->
         <div id="page-register" class="page active">
             <div class="card">
-                <p>您好，<span id="profileName" style="color: var(--primary); font-weight:bold;">讀取中...</span></p>
+                <p>您好，<span id="profileName" style="color: var(--primary); font-weight:bold;">連線 LINE 中...</span></p>
                 <div class="form-group"><label>報名姓名</label><input type="text" id="inputName" required></div>
-                <div class="form-group"><label>報名數量 </label><input type="number" id="inputQty" value="1" min="1" max="4" required></div>
+                <div class="form-group"><label>報名數量 (最多4個)</label><input type="number" id="inputQty" value="1" min="1" max="4" required></div>
                 <div class="form-group">
                     <label>選擇班別</label>
                     <select id="selectClass">
@@ -60,7 +84,7 @@
                     <select id="myRecordsSelect"><option value="">請點擊下方載入...</option></select>
                     <button type="button" class="btn-secondary" onclick="fetchMyRecords('upload')">🔄 載入紀錄</button>
                 </div>
-                <div id="upload-section" style="display:none; border-top: 1px dashed #ddd; padding-top: 20px;">
+                <div id="upload-section" style="display:none; border-top: 1px dashed var(--border); padding-top: 20px;">
                     <input type="file" id="delayedImageUpload" accept="image/*" multiple style="margin-bottom: 15px;">
                     <button type="button" id="btnDelayedUpload" onclick="uploadDelayedImages()">確認上傳</button>
                 </div>
@@ -72,15 +96,15 @@
             <div class="card">
                 <div class="form-group">
                     <label>選擇要修改的紀錄</label>
-                    <select id="editRecordsSelect" onchange="loadEditData()"><option value="">請點擊下方載入...</option></select>
+                    <select id="editRecordsSelect"><option value="">請點擊下方載入...</option></select>
                     <button type="button" class="btn-secondary" onclick="fetchMyRecords('edit')">🔄 載入紀錄</button>
                 </div>
                 
-                <div id="edit-section" style="display:none; border-top: 1px dashed #ddd; padding-top: 20px;">
+                <div id="edit-section" style="display:none; border-top: 1px dashed var(--border); padding-top: 20px;">
                     <input type="hidden" id="editOrderId">
                     <input type="hidden" id="editOldClass">
                     <div class="form-group"><label>新姓名</label><input type="text" id="editName"></div>
-                    <div class="form-group"><label>新數量</label><input type="number" id="editQty" min="1" max="4" required></div>
+                    <div class="form-group"><label>新數量 (最多4個)</label><input type="number" id="editQty" min="1" max="4" required></div>
                     <div class="form-group">
                         <label>新班別</label>
                         <select id="editClass">
@@ -101,7 +125,7 @@
                         <option value="A">A班</option><option value="B">B班</option><option value="C">C班</option><option value="D">D班</option><option value="E">E班</option><option value="F">F班</option><option value="G">G班</option><option value="H">H班</option>
                     </select>
                 </div>
-                <div id="list-result"><p style="text-align: center; color: #888;">請選擇班級</p></div>
+                <div id="list-result"><p style="text-align: center; color: var(--text-muted);">請選擇班級</p></div>
             </div>
         </div>
     </div>
@@ -124,7 +148,6 @@
 
         async function initializeLiff() {
             try {
-                document.getElementById("profileName").innerText = "連線 LINE 中...";
                 await liff.init({ liffId: LIFF_ID });
                 if (!liff.isLoggedIn()) {
                     liff.login();
@@ -140,7 +163,6 @@
         }
         initializeLiff();
 
-        // 核心防呆：檢查是否成功抓到 LINE 名稱
         function checkLineStatus() {
             if (currentLineName === "未登入" || currentLineName === "連線 LINE 中..." || currentLineName === "連線失敗") {
                 alert("⚠️ 系統尚未成功讀取您的 LINE 帳號，請確認網路連線或重新整理頁面！");
@@ -164,16 +186,18 @@
         }
 
         async function submitRegistration() {
-            const qty = parseInt(document.getElementById("inputQty").value);
-if(qty > 4) return alert("每人最多只能報名 4 個數量！");
-            if (!checkLineStatus()) return; // 沒登入 LINE 就擋下
+            if (!checkLineStatus()) return;
             
             const name = document.getElementById("inputName").value;
+            const qty = parseInt(document.getElementById("inputQty").value);
+            
             if(!name) return alert("請輸入姓名！");
+            if(qty > 4) return alert("每人最多只能報名 4 個數量！");
+            
             const btn = document.getElementById("btnSubmit");
             btn.innerText = "傳送中..."; btn.disabled = true;
 
-            const payload = { action: "register", lineName: currentLineName, source: currentSource, name: name, quantity: document.getElementById("inputQty").value, targetClass: document.getElementById("selectClass").value };
+            const payload = { action: "register", lineName: currentLineName, source: currentSource, name: name, quantity: qty, targetClass: document.getElementById("selectClass").value };
             try {
                 let res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
                 let result = await res.json();
@@ -182,8 +206,8 @@ if(qty > 4) return alert("每人最多只能報名 4 個數量！");
             btn.innerText = "提交報名"; btn.disabled = false;
         }
 
-       async function fetchMyRecords(mode) {
-            if (!checkLineStatus()) return; // 沒登入 LINE 就擋下
+        async function fetchMyRecords(mode) {
+            if (!checkLineStatus()) return;
 
             const selectId = mode === 'upload' ? "myRecordsSelect" : "editRecordsSelect";
             const select = document.getElementById(selectId);
@@ -203,22 +227,15 @@ if(qty > 4) return alert("每人最多只能報名 4 個數量！");
                         select.innerHTML += `<option value='${optionVal}'>${rec.className} - ${rec.name}</option>`;
                     });
                     
-                    // 👇 這裡修復了下拉選單的觸發邏輯 👇
                     select.onchange = function() {
                         if(this.value !== "") {
-                            if(mode === 'upload') {
-                                document.getElementById("upload-section").style.display = "block";
-                            }
-                            if(mode === 'edit') {
-                                loadEditData(); // 呼叫載入資料的函數，並顯示修改區塊
-                            }
+                            if(mode === 'upload') document.getElementById("upload-section").style.display = "block";
+                            if(mode === 'edit') loadEditData();
                         } else {
                             if(mode === 'upload') document.getElementById("upload-section").style.display = "none";
                             if(mode === 'edit') document.getElementById("edit-section").style.display = "none";
                         }
                     };
-                    // 👆 修復結束 👆
-
                 } else select.innerHTML = '<option value="">找不到紀錄</option>';
             } catch (err) { select.innerHTML = '<option value="">讀取失敗</option>'; }
         }
@@ -238,9 +255,10 @@ if(qty > 4) return alert("每人最多只能報名 4 個數量！");
         }
 
         async function submitEdit() {
+            if (!checkLineStatus()) return;
+            
             const editQty = parseInt(document.getElementById("editQty").value);
-if(editQty > 4) return alert("每人最多只能報名 4 個數量！");
-            if (!checkLineStatus()) return; // 沒登入 LINE 就擋下
+            if(editQty > 4) return alert("每人最多只能報名 4 個數量！");
 
             const btn = document.getElementById("btnEdit");
             btn.innerText = "儲存中..."; btn.disabled = true;
@@ -251,7 +269,7 @@ if(editQty > 4) return alert("每人最多只能報名 4 個數量！");
                 oldTargetClass: document.getElementById("editOldClass").value,
                 newTargetClass: document.getElementById("editClass").value,
                 newName: document.getElementById("editName").value,
-                newQuantity: document.getElementById("editQty").value
+                newQuantity: editQty
             };
 
             try {
@@ -267,7 +285,7 @@ if(editQty > 4) return alert("每人最多只能報名 4 個數量！");
         }
 
         async function uploadDelayedImages() {
-            if (!checkLineStatus()) return; // 沒登入 LINE 就擋下
+            if (!checkLineStatus()) return;
 
             const val = document.getElementById("myRecordsSelect").value;
             if(!val) return;
@@ -290,28 +308,25 @@ if(editQty > 4) return alert("每人最多只能報名 4 個數量！");
             btn.innerText = "確認上傳"; btn.disabled = false;
         }
 
-async function fetchClassList() {
+        async function fetchClassList() {
             const targetClass = document.getElementById("viewClassSelect").value;
             const listDiv = document.getElementById("list-result");
-            listDiv.innerHTML = "<p style='text-align:center;'>載入中...</p>";
+            listDiv.innerHTML = "<p style='text-align:center; color: var(--text-muted);'>載入中...</p>";
             try {
                 let res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "getList", targetClass: targetClass }) });
                 let result = await res.json();
                 if (result.success) {
-                    // 👇 修改這裡：表格加上了「已上傳圖片」欄位
                     let html = `<table><tr><th>序號</th><th>LINE名稱</th><th>圖片數</th></tr>`;
                     if (result.list.length === 0) {
                         html += `<tr><td colspan="3" style="text-align:center;">無人報名</td></tr>`;
                     } else {
                         result.list.forEach(item => { 
-                            // 根據回傳的 imgCount 顯示張數
                             html += `<tr><td>${item.seq}</td><td>${item.lineName}</td><td style="text-align:center; color:var(--primary); font-weight:bold;">${item.imgCount} 張</td></tr>`; 
                         });
                     }
                     listDiv.innerHTML = html + `</table>`;
-                    // 👆 修改結束
-                } else listDiv.innerHTML = `<p style='color:red;'>無法載入</p>`;
-            } catch (err) { listDiv.innerHTML = `<p style='color:red;'>連線錯誤</p>`; }
+                } else listDiv.innerHTML = `<p style='color:#ff6b6b;'>無法載入</p>`;
+            } catch (err) { listDiv.innerHTML = `<p style='color:#ff6b6b;'>連線錯誤</p>`; }
         }
 
         function compressImage(file) {
@@ -325,11 +340,4 @@ async function fetchClassList() {
                         if (w > 800) { h = Math.round(h * 800 / w); w = 800; }
                         canvas.width = w; canvas.height = h;
                         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                        resolve(canvas.toDataURL('image/jpeg', 0.7));
-                    }
-                }
-            });
-        }
-    </script>
-</body>
-</html>
+                        resolve(canvas
