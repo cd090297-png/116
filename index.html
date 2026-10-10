@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
     <title>116開運手鍊報名系統</title>
-   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         :root { --primary: #00B900; --bg: #f4f5f7; --card: #ffffff; --text: #333333; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 0; padding-bottom: 70px; }
@@ -67,7 +67,7 @@
             </div>
         </div>
 
-        <!-- 【頁面三】修改資料 (新功能) -->
+        <!-- 【頁面三】修改資料 -->
         <div id="page-edit" class="page">
             <div class="card">
                 <div class="form-group">
@@ -115,20 +115,18 @@
     </div>
 
     <script>
+        // ⚠️ 請替換以下兩行設定
         const LIFF_ID = "2011959696-d1Lkeojo"; 
         const GAS_URL = "https://script.google.com/macros/s/AKfycbzyLksHBQkGF9e3GrjnZJwEzqKg5F7qU8nb9zdt8xSwIKhQHevccfqt5Uu2PioAAjmK/exec";
         
         let currentLineName = "未登入"; let currentSource = "網頁";
-        let loadedRecords = []; // 暫存抓到的紀錄供編輯頁面使用
+        let loadedRecords = [];
 
-// 1. 初始化 (抓蟲測試版)
         async function initializeLiff() {
             try {
-                document.getElementById("profileName").innerText = "開始連線 LINE...";
+                document.getElementById("profileName").innerText = "連線 LINE 中...";
                 await liff.init({ liffId: LIFF_ID });
-                
                 if (!liff.isLoggedIn()) {
-                    document.getElementById("profileName").innerText = "準備登入...";
                     liff.login();
                 } else {
                     const profile = await liff.getProfile();
@@ -137,12 +135,19 @@
                     document.getElementById("profileName").innerText = currentLineName;
                 }
             } catch (err) {
-                // 如果失敗，會彈出視窗告訴我們具體原因
-                alert("LIFF 發生錯誤：" + err.message);
                 document.getElementById("profileName").innerText = "連線失敗";
             }
         }
         initializeLiff();
+
+        // 核心防呆：檢查是否成功抓到 LINE 名稱
+        function checkLineStatus() {
+            if (currentLineName === "未登入" || currentLineName === "連線 LINE 中..." || currentLineName === "連線失敗") {
+                alert("⚠️ 系統尚未成功讀取您的 LINE 帳號，請確認網路連線或重新整理頁面！");
+                return false;
+            }
+            return true;
+        }
 
         function switchPage(page) {
             document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
@@ -159,6 +164,8 @@
         }
 
         async function submitRegistration() {
+            if (!checkLineStatus()) return; // 沒登入 LINE 就擋下
+            
             const name = document.getElementById("inputName").value;
             if(!name) return alert("請輸入姓名！");
             const btn = document.getElementById("btnSubmit");
@@ -174,6 +181,8 @@
         }
 
         async function fetchMyRecords(mode) {
+            if (!checkLineStatus()) return; // 沒登入 LINE 就擋下
+
             const selectId = mode === 'upload' ? "myRecordsSelect" : "editRecordsSelect";
             const select = document.getElementById(selectId);
             select.innerHTML = '<option value="">載入中...</option>';
@@ -204,7 +213,6 @@
             } catch (err) { select.innerHTML = '<option value="">讀取失敗</option>'; }
         }
 
-        // 載入編輯資料至表單
         function loadEditData() {
             const idx = document.getElementById("editRecordsSelect").value;
             if(idx === "") { document.getElementById("edit-section").style.display = "none"; return; }
@@ -219,8 +227,9 @@
             document.getElementById("edit-section").style.display = "block";
         }
 
-        // 送出修改資料
         async function submitEdit() {
+            if (!checkLineStatus()) return; // 沒登入 LINE 就擋下
+
             const btn = document.getElementById("btnEdit");
             btn.innerText = "儲存中..."; btn.disabled = true;
 
@@ -237,12 +246,17 @@
                 let res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
                 let result = await res.json();
                 alert(result.message);
-                if(result.success) fetchMyRecords('edit'); // 重新整理下拉選單
+                if(result.success) {
+                    document.getElementById("edit-section").style.display = "none";
+                    fetchMyRecords('edit');
+                }
             } catch (err) { alert("修改發生錯誤"); }
             btn.innerText = "儲存修改"; btn.disabled = false;
         }
 
         async function uploadDelayedImages() {
+            if (!checkLineStatus()) return; // 沒登入 LINE 就擋下
+
             const val = document.getElementById("myRecordsSelect").value;
             if(!val) return;
             const recordData = JSON.parse(val);
