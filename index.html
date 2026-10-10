@@ -41,7 +41,7 @@
             <div class="card">
                 <p>您好，<span id="profileName" style="color: var(--primary); font-weight:bold;">讀取中...</span></p>
                 <div class="form-group"><label>報名姓名</label><input type="text" id="inputName" required></div>
-                <div class="form-group"><label>報名數量</label><input type="number" id="inputQty" value="1" min="1" required></div>
+                <div class="form-group"><label>報名數量 </label><input type="number" id="inputQty" value="1" min="1" max="4" required></div>
                 <div class="form-group">
                     <label>選擇班別</label>
                     <select id="selectClass">
@@ -80,7 +80,7 @@
                     <input type="hidden" id="editOrderId">
                     <input type="hidden" id="editOldClass">
                     <div class="form-group"><label>新姓名</label><input type="text" id="editName"></div>
-                    <div class="form-group"><label>新數量</label><input type="number" id="editQty" min="1"></div>
+                    <div class="form-group"><label>新數量</label><input type="number" id="editQty" min="1" max="4" required></div>
                     <div class="form-group">
                         <label>新班別</label>
                         <select id="editClass">
@@ -164,6 +164,8 @@
         }
 
         async function submitRegistration() {
+            const qty = parseInt(document.getElementById("inputQty").value);
+if(qty > 4) return alert("每人最多只能報名 4 個數量！");
             if (!checkLineStatus()) return; // 沒登入 LINE 就擋下
             
             const name = document.getElementById("inputName").value;
@@ -236,6 +238,8 @@
         }
 
         async function submitEdit() {
+            const editQty = parseInt(document.getElementById("editQty").value);
+if(editQty > 4) return alert("每人最多只能報名 4 個數量！");
             if (!checkLineStatus()) return; // 沒登入 LINE 就擋下
 
             const btn = document.getElementById("btnEdit");
@@ -286,7 +290,7 @@
             btn.innerText = "確認上傳"; btn.disabled = false;
         }
 
-        async function fetchClassList() {
+async function fetchClassList() {
             const targetClass = document.getElementById("viewClassSelect").value;
             const listDiv = document.getElementById("list-result");
             listDiv.innerHTML = "<p style='text-align:center;'>載入中...</p>";
@@ -294,10 +298,18 @@
                 let res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "getList", targetClass: targetClass }) });
                 let result = await res.json();
                 if (result.success) {
-                    let html = `<table><tr><th>序號</th><th>LINE名稱</th></tr>`;
-                    if (result.list.length === 0) html += `<tr><td colspan="2" style="text-align:center;">無人報名</td></tr>`;
-                    else result.list.forEach(item => { html += `<tr><td>${item.seq}</td><td>${item.lineName}</td></tr>`; });
+                    // 👇 修改這裡：表格加上了「已上傳圖片」欄位
+                    let html = `<table><tr><th>序號</th><th>LINE名稱</th><th>圖片數</th></tr>`;
+                    if (result.list.length === 0) {
+                        html += `<tr><td colspan="3" style="text-align:center;">無人報名</td></tr>`;
+                    } else {
+                        result.list.forEach(item => { 
+                            // 根據回傳的 imgCount 顯示張數
+                            html += `<tr><td>${item.seq}</td><td>${item.lineName}</td><td style="text-align:center; color:var(--primary); font-weight:bold;">${item.imgCount} 張</td></tr>`; 
+                        });
+                    }
                     listDiv.innerHTML = html + `</table>`;
+                    // 👆 修改結束
                 } else listDiv.innerHTML = `<p style='color:red;'>無法載入</p>`;
             } catch (err) { listDiv.innerHTML = `<p style='color:red;'>連線錯誤</p>`; }
         }
