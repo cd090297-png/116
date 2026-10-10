@@ -2,47 +2,133 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
     <title>活動報名系統</title>
-    <!-- 引入 LINE LIFF SDK -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        :root { --primary: #00B900; --bg: #f4f5f7; --card: #ffffff; --text: #333333; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 0; padding-bottom: 70px; }
+        .header { background-color: var(--primary); color: white; padding: 15px; text-align: center; font-size: 18px; font-weight: bold; }
+        .container { padding: 15px; }
+        .card { background-color: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 14px; color: #555; }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; background-color: var(--primary); color: white; border: none; padding: 14px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button:disabled { background-color: #cccccc; }
+        
+        /* 底部導覽列 */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
+        .nav-item { flex: 1; text-align: center; padding: 15px 0; font-size: 14px; color: #888; font-weight: bold; cursor: pointer; }
+        .nav-item.active { color: var(--primary); border-top: 3px solid var(--primary); }
+        
+        /* 頁面切換 */
+        .page { display: none; }
+        .page.active { display: block; }
+        
+        /* 名單表格 */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f8f9fa; }
+    </style>
 </head>
 <body>
-    <h2>報名表單</h2>
-    <p>你好，<span id="profileName">讀取中...</span></p>
-    
-    <form id="regForm">
-        <label>選擇班別：</label>
-        <select id="classSelect" required>
-            <option value="A">A班 (限量20名)</option>
-            <option value="B">B班 (限量20名)</option>
-            <option value="C">C班 (限量20名)</option>
-            <!-- 依此類推加到H班 -->
-        </select>
-        <br><br>
-        
-        <label>上傳相關圖片：</label>
-        <input type="file" id="imageUpload" accept="image/*">
-        <br><br>
-        
-        <button type="button" onclick="submitForm()">確認報名</button>
-    </form>
+
+    <div class="header" id="headerTitle">活動報名</div>
+
+    <div class="container">
+        <!-- 【頁面一】報名表單 -->
+        <div id="page-register" class="page active">
+            <div class="card">
+                <p>您好，<span id="profileName" style="color: var(--primary); font-weight:bold;">讀取中...</span></p>
+                
+                <div id="register-form-area">
+                    <div class="form-group">
+                        <label>報名姓名</label>
+                        <input type="text" id="inputName" placeholder="請輸入姓名" required>
+                    </div>
+                    <div class="form-group">
+                        <label>報名數量</label>
+                        <input type="number" id="inputQty" placeholder="請輸入數量" value="1" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>選擇班別</label>
+                        <select id="selectClass">
+                            <option value="A">A班 (限量20名)</option>
+                            <option value="B">B班 (限量20名)</option>
+                            <option value="C">C班 (限量20名)</option>
+                            <option value="D">D班 (限量20名)</option>
+                            <option value="E">E班 (限量20名)</option>
+                            <option value="F">F班 (限量20名)</option>
+                            <option value="G">G班 (限量20名)</option>
+                            <option value="H">H班 (限量20名)</option>
+                        </select>
+                    </div>
+                    <button type="button" id="btnSubmit" onclick="submitRegistration()">提交報名資料</button>
+                </div>
+
+                <!-- 隱藏的上傳區塊，報名成功後顯示 -->
+                <div id="upload-area" style="display: none; margin-top: 20px; border-top: 1px dashed #ddd; padding-top: 20px;">
+                    <h3 style="color: var(--primary); margin-top:0;">✅ 報名成功！</h3>
+                    <p style="font-size: 14px; color: #666;">您的序號已建立。請上傳相關圖片 (最多 5 張)。</p>
+                    <input type="file" id="imageUpload" accept="image/*" multiple style="margin-bottom: 15px;">
+                    <button type="button" id="btnUpload" onclick="uploadImages()">確認上傳圖片</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 【頁面二】查詢名單 -->
+        <div id="page-view" class="page">
+            <div class="card">
+                <div class="form-group">
+                    <label>請選擇要查詢的班級</label>
+                    <select id="viewClassSelect" onchange="fetchClassList()">
+                        <option value="A">A班</option>
+                        <option value="B">B班</option>
+                        <option value="C">C班</option>
+                        <option value="D">D班</option>
+                        <option value="E">E班</option>
+                        <option value="F">F班</option>
+                        <option value="G">G班</option>
+                        <option value="H">H班</option>
+                    </select>
+                </div>
+                <div id="list-result">
+                    <!-- 表格動態產生於此 -->
+                    <p style="text-align: center; color: #888;">請選擇班級以載入名單</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部導覽列 -->
+    <div class="bottom-nav">
+        <div class="nav-item active" id="nav-reg" onclick="switchPage('register')">📝 填寫報名</div>
+        <div class="nav-item" id="nav-view" onclick="switchPage('view')">📋 查詢名單</div>
+    </div>
 
     <script>
-        let lineName = "未登入";
-        let lineSource = "網頁";
+        // === ⚠️ 請在這裡替換你的設定 ===
+        const LIFF_ID = "2011959696-d1Lkeojo"; 
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbzyLksHBQkGF9e3GrjnZJwEzqKg5F7qU8nb9zdt8xSwIKhQHevccfqt5Uu2PioAAjmK/exec";
+        // ==================================
 
-        // 初始化 LIFF
+        let currentLineName = "未登入";
+        let currentSource = "網頁";
+        let currentOrderId = ""; // 存放報名成功後拿到的 ID
+        let currentClass = ""; // 存放報名成功的班級
+
+        // 1. 初始化 LIFF
         async function initializeLiff() {
             try {
-                await liff.init({ liffId: "2011959696-d1Lkeojo" }); // <--- 替換你的 LIFF ID
+                await liff.init({ liffId: LIFF_ID });
                 if (!liff.isLoggedIn()) {
                     liff.login();
                 } else {
                     const profile = await liff.getProfile();
-                    lineName = profile.displayName;
-                    lineSource = liff.getOS(); // 可抓取是在 iOS, Android 或 Web 登入
-                    document.getElementById("profileName").innerText = lineName;
+                    currentLineName = profile.displayName;
+                    currentSource = liff.getOS();
+                    document.getElementById("profileName").innerText = currentLineName;
                 }
             } catch (err) {
                 console.error("LIFF 初始化失敗", err);
@@ -50,54 +136,169 @@
         }
         initializeLiff();
 
-        // 處理表單送出
-        async function submitForm() {
-            const targetClass = document.getElementById("classSelect").value;
-            const fileInput = document.getElementById("imageUpload");
-            let imageBase64 = "";
-            let fileName = "";
-
-            if (fileInput.files.length > 0) {
-                const file = fileInput.files[0];
-                fileName = file.name;
-                imageBase64 = await toBase64(file);
+        // 2. 切換下方分頁
+        function switchPage(page) {
+            document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            
+            if(page === 'register') {
+                document.getElementById('page-register').classList.add('active');
+                document.getElementById('nav-reg').classList.add('active');
+                document.getElementById('headerTitle').innerText = "活動報名";
+            } else {
+                document.getElementById('page-view').classList.add('active');
+                document.getElementById('nav-view').classList.add('active');
+                document.getElementById('headerTitle').innerText = "各班名單查詢";
+                fetchClassList(); // 切換過去時自動載入名單
             }
-
-            const data = {
-                lineName: lineName,
-                source: lineSource,
-                targetClass: targetClass,
-                imageBase64: imageBase64,
-                fileName: fileName
-            };
-
-            // 呼叫 GAS 後端
-            alert("資料傳送中，請稍候...");
-            fetch("https://script.google.com/macros/s/AKfycbzyLksHBQkGF9e3GrjnZJwEzqKg5F7qU8nb9zdt8xSwIKhQHevccfqt5Uu2PioAAjmK/exec", { // <--- 替換你的 GAS 部署網址
-                method: "POST",
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(result => {
-                if(result.success) {
-                    alert("報名成功！");
-                    liff.closeWindow(); // 報名完自動關閉 LINE 視窗
-                } else {
-                    alert(result.message); // 顯示額滿或其他錯誤訊息
-                }
-            })
-            .catch(error => {
-                alert("發生錯誤，請重試！");
-            });
         }
 
-        // 圖片轉 Base64 函數
-        const toBase64 = file => new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = error => reject(error);
-        });
+        // 3. 提交報名資料
+        async function submitRegistration() {
+            const name = document.getElementById("inputName").value;
+            const qty = document.getElementById("inputQty").value;
+            const targetClass = document.getElementById("selectClass").value;
+
+            if(!name) return alert("請輸入報名姓名！");
+
+            const btn = document.getElementById("btnSubmit");
+            btn.innerText = "資料傳送中...";
+            btn.disabled = true;
+
+            const payload = {
+                action: "register",
+                lineName: currentLineName,
+                source: currentSource,
+                name: name,
+                quantity: qty,
+                targetClass: targetClass
+            };
+
+            try {
+                let response = await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
+                let result = await response.json();
+
+                if (result.success) {
+                    currentOrderId = result.orderId;
+                    currentClass = targetClass;
+                    // 隱藏表單，顯示上傳區塊
+                    document.getElementById("register-form-area").style.display = "none";
+                    document.getElementById("upload-area").style.display = "block";
+                } else {
+                    alert(result.message);
+                    btn.innerText = "提交報名資料";
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                alert("網路錯誤，請重試");
+                btn.innerText = "提交報名資料";
+                btn.disabled = false;
+            }
+        }
+
+        // 4. 上傳圖片
+        async function uploadImages() {
+            const fileInput = document.getElementById("imageUpload");
+            if (fileInput.files.length === 0) return alert("請選擇至少一張圖片！");
+            if (fileInput.files.length > 5) return alert("最多只能上傳 5 張圖片！");
+
+            const btn = document.getElementById("btnUpload");
+            btn.innerText = "圖片壓縮與上傳中(請稍候)...";
+            btn.disabled = true;
+
+            try {
+                let imagesData = [];
+                for (let i = 0; i < fileInput.files.length; i++) {
+                    let file = fileInput.files[i];
+                    let base64 = await compressImage(file);
+                    imagesData.push({ name: file.name, base64: base64 });
+                }
+
+                const payload = {
+                    action: "upload",
+                    orderId: currentOrderId,
+                    targetClass: currentClass,
+                    lineName: currentLineName,
+                    images: imagesData
+                };
+
+                let response = await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
+                let result = await response.json();
+
+                if (result.success) {
+                    alert("全部完成！報名與圖片皆已儲存。");
+                    liff.closeWindow(); // 關閉 LINE 視窗
+                } else {
+                    alert("上傳失敗：" + result.message);
+                    btn.innerText = "確認上傳圖片";
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                alert("上傳發生錯誤！可能是檔案過大。");
+                btn.innerText = "確認上傳圖片";
+                btn.disabled = false;
+            }
+        }
+
+        // 5. 查詢名單
+        async function fetchClassList() {
+            const targetClass = document.getElementById("viewClassSelect").value;
+            const listDiv = document.getElementById("list-result");
+            listDiv.innerHTML = "<p style='text-align:center;'>資料載入中...</p>";
+
+            const payload = { action: "getList", targetClass: targetClass };
+
+            try {
+                let response = await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
+                let result = await response.json();
+
+                if (result.success) {
+                    let html = `<table><tr><th>序號</th><th>LINE名稱</th></tr>`;
+                    if (result.list.length === 0) {
+                        html += `<tr><td colspan="2" style="text-align:center;">目前尚無人報名</td></tr>`;
+                    } else {
+                        result.list.forEach(item => {
+                            html += `<tr><td>${item.seq}</td><td>${item.lineName}</td></tr>`;
+                        });
+                    }
+                    html += `</table>`;
+                    listDiv.innerHTML = html;
+                } else {
+                    listDiv.innerHTML = `<p style='color:red;'>無法載入資料</p>`;
+                }
+            } catch (error) {
+                listDiv.innerHTML = `<p style='color:red;'>連線錯誤</p>`;
+            }
+        }
+
+        // 工具：在客戶端壓縮圖片轉 Base64 (防止多張原圖塞爆記憶體)
+        function compressImage(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 800; // 壓縮後的最大寬度
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        if (width > MAX_WIDTH) {
+                            height = Math.round((height *= MAX_WIDTH / width));
+                            width = MAX_WIDTH;
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.7)); // 70% 品質
+                    }
+                }
+            });
+        }
     </script>
 </body>
 </html>
