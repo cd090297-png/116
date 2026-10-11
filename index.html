@@ -25,20 +25,22 @@
         button:disabled { background-color: #D6D6D6; color: #999999; }
         button.btn-outline { background-color: transparent; border: 2px solid var(--primary); color: var(--primary); margin-top: 15px; }
         
-        /* 滿版圖片預覽 */
         .preview-container { display: flex; flex-direction: column; gap: 12px; margin-bottom: 10px; }
         .preview-img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
-        /* 狀態提示 */
         #statusText { text-align: center; font-size: 14px; font-weight: bold; margin-top: 15px; min-height: 20px; }
         .text-error { color: #d32f2f; }
         .text-info { color: var(--primary); }
         
-        /* 成功畫面區塊 */
         #successCard { display: none; text-align: center; padding: 40px 20px; }
         .success-icon { font-size: 60px; margin-bottom: 15px; }
         .success-title { color: var(--success); font-size: 22px; margin-bottom: 10px; font-weight: bold; }
         .success-desc { color: var(--text-muted); font-size: 15px; margin-bottom: 25px; line-height: 1.5; }
+
+        /* 新增：紀錄表格的 CSS */
+        .log-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+        .log-table th, .log-table td { border: 1px solid var(--border); padding: 8px; text-align: center; }
+        .log-table th { background-color: var(--primary); color: white; }
     </style>
 </head>
 <body>
@@ -46,7 +48,6 @@
     <div class="header">手鍊卦紙上傳</div>
 
     <div class="container">
-        <!-- 填寫與上傳表單區塊 -->
         <div class="card" id="formCard">
             <p style="text-align: center; margin-top: 0; margin-bottom: 20px;">您好，<span id="profileName" style="color: var(--primary); font-weight:bold;">準備就緒</span></p>
             
@@ -57,8 +58,6 @@
                     <option value="E">E班</option><option value="F">F班</option><option value="G">G班</option><option value="H">H班</option>
                 </select>
             </div>
-
-            <!-- ⚠️ 已刪除：報名序號的下拉選單區塊 -->
 
             <div class="form-group">
                 <label>報名姓名</label>
@@ -72,23 +71,41 @@
             </div>
 
             <button type="button" id="btnSubmit" onclick="submitForm()">確認上傳</button>
-            <div id="statusText"></div> <!-- 進度提示會顯示在這裡 -->
+            <div id="statusText"></div>
+
+            <!-- 新增：查詢個人紀錄區塊 -->
+            <hr style="border: 0; border-top: 1px solid #E0E0E0; margin: 25px 0 15px 0;">
+            <button type="button" class="btn-outline" id="btnCheckLogs" onclick="fetchMyLogs()" style="margin-top: 0; padding: 10px;">📋 查看我的上傳紀錄</button>
+            
+            <div id="logContainer" style="display: none;">
+                <table class="log-table">
+                    <thead>
+                        <tr>
+                            <th>上傳時間</th>
+                            <th>班別</th>
+                            <th>張數</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logBody">
+                        <!-- 紀錄會動態生成在這裡 -->
+                    </tbody>
+                </table>
+            </div>
+
         </div>
 
-        <!-- 成功完成區塊 (預設隱藏) -->
         <div class="card" id="successCard">
             <div class="success-icon">✅</div>
             <div class="success-title">上傳成功！</div>
             <div class="success-desc">您的圖片已完整儲存至雲端。<br>感謝您的配合！</div>
-            <button type="button" class="btn-outline" onclick="resetForm()">返回重新上傳</button>
+            <button type="button" class="btn-outline" onclick="resetForm()">返回繼續上傳</button>
+            <button type="button" class="btn-outline" onclick="fetchMyLogs(true)" style="margin-top: 10px; border-color: #666; color: #666;">📋 檢查剛剛的上傳紀錄</button>
         </div>
     </div>
 
     <script>
-        // ==========================================
         const LIFF_ID = "2011959696-d1Lkeojo"; 
         const GAS_URL = "https://script.google.com/macros/s/AKfycbzH2D3oAQqZyp5fVi0Vt72V8wzFgLphh4a0iJthV_vraJFmuu9_RcoC19cEzjMmvS4Nkw/exec";
-        // ==========================================
         
         let currentLineName = "未登入"; 
 
@@ -103,7 +120,7 @@
                     liff.login();
                 }
             } catch (err) {
-                console.log("LIFF 未連線，但不影響一般瀏覽器上傳");
+                console.log("LIFF 未連線，但不影響一般瀏覽器測試");
             }
         }
         initializeLiff();
@@ -142,7 +159,6 @@
         async function submitForm() {
             const name = document.getElementById("inputName").value.trim();
             const targetClass = document.getElementById("selectClass").value;
-            // ⚠️ 已刪除：抓取序號的程式碼
             const fileInput = document.getElementById("imageUpload");
             
             if(!name) return showStatus("⚠️ 請輸入報名姓名！", "error");
@@ -152,19 +168,16 @@
             btn.disabled = true;
 
             try {
-                showStatus("⏳ 圖片處理中，請稍候... (這可能需要幾秒鐘)", "info");
+                showStatus("⏳ 圖片處理中，請稍候... (約需幾秒鐘)", "info");
                 
-                // 壓縮圖片
                 let imagesData = [];
                 for (let i = 0; i < fileInput.files.length; i++) {
                     imagesData.push({ base64: await compressImage(fileInput.files[i]) });
                 }
 
-                // 發送給 GAS
                 const payload = { 
                     action: "upload", 
                     targetClass: targetClass, 
-                    // ⚠️ 已刪除：傳送 seqNumber
                     name: name, 
                     lineName: currentLineName,
                     images: imagesData 
@@ -178,22 +191,75 @@
 
                 if (!result.success) throw new Error(result.message);
 
-                // 切換至成功畫面
                 document.getElementById("formCard").style.display = "none";
                 document.getElementById("successCard").style.display = "block";
 
             } catch (err) {
-                showStatus("❌ 上傳異常，請確認檔案不要過大，或網路是否穩定。", "error");
+                showStatus("❌ 上傳異常，請確認網路狀態並重試。", "error");
             } finally {
                 btn.disabled = false;
             }
         }
+
+        // ================= 新增：獲取紀錄的函數 =================
+        async function fetchMyLogs(fromSuccessPage = false) {
+            const btn = document.getElementById("btnCheckLogs");
+            const logContainer = document.getElementById("logContainer");
+            const logBody = document.getElementById("logBody");
+            
+            if (!fromSuccessPage) {
+                btn.innerText = "⏳ 查詢中...";
+                btn.disabled = true;
+            }
+
+            try {
+                const payload = { action: "getLogs", lineName: currentLineName };
+                let result = await fetch(GAS_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+                    body: JSON.stringify(payload)
+                }).then(res => res.json());
+
+                if (result.success) {
+                    logBody.innerHTML = ""; // 清空舊內容
+                    
+                    if (result.data && result.data.length > 0) {
+                        result.data.forEach(log => {
+                            // 將 GAS 傳回的日期字串整理得更簡潔 (例如 "10/11 14:30")
+                            const dateStr = log.time.substring(5, 16); 
+                            const row = `<tr>
+                                <td>${dateStr}</td>
+                                <td>${log.className}</td>
+                                <td>${log.count} 張</td>
+                            </tr>`;
+                            logBody.insertAdjacentHTML("beforeend", row);
+                        });
+                    } else {
+                        logBody.innerHTML = `<tr><td colspan="3" style="color:#999; padding:15px;">尚無上傳紀錄</td></tr>`;
+                    }
+                    
+                    if (fromSuccessPage) {
+                        resetForm(); // 如果從成功頁面點擊，則退回表單頁面並顯示表格
+                    }
+                    logContainer.style.display = "block";
+                }
+            } catch (err) {
+                alert("查詢失敗，請稍後再試！");
+            } finally {
+                if (!fromSuccessPage) {
+                    btn.innerText = "📋 查看我的上傳紀錄";
+                    btn.disabled = false;
+                }
+            }
+        }
+        // =========================================================
 
         function resetForm() {
             document.getElementById("inputName").value = "";
             document.getElementById("imageUpload").value = "";
             document.getElementById("imagePreviewContainer").innerHTML = "";
             document.getElementById("statusText").innerText = "";
+            document.getElementById("logContainer").style.display = "none";
             
             document.getElementById("successCard").style.display = "none";
             document.getElementById("formCard").style.display = "block";
