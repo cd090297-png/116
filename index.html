@@ -6,15 +6,9 @@
     <title>活動報名系統</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
-        /* ✨ 柔和明亮護眼主題 */
         :root { 
-            --primary: #388E3C; 
-            --bg: #F4F6F8; 
-            --card: #FFFFFF; 
-            --text: #333333; 
-            --text-muted: #666666; 
-            --border: #E0E0E0; 
-            --input-bg: #FAFAFA; 
+            --primary: #388E3C; --bg: #F4F6F8; --card: #FFFFFF; 
+            --text: #333333; --text-muted: #666666; --border: #E0E0E0; --input-bg: #FAFAFA; 
         }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 0; padding-bottom: 70px; }
         .header { background-color: var(--primary); color: white; padding: 15px; text-align: center; font-size: 18px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
@@ -37,8 +31,6 @@
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
         th { background-color: #F5F7F9; color: var(--text); }
-        
-        /* ✨ 圖片預覽區塊的樣式 */
         .preview-container { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
         .preview-img { width: calc(33.333% - 7px); aspect-ratio: 1; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     </style>
@@ -74,12 +66,8 @@
                 </div>
                 <div id="upload-section" style="display:none; border-top: 1px dashed var(--border); padding-top: 20px;">
                     <label style="color: var(--primary);">請選擇要上傳的圖片 (最多5張)</label>
-                    <!-- ✨ 加入了 onchange 事件來觸發預覽 -->
                     <input type="file" id="delayedImageUpload" accept="image/*" multiple style="margin-bottom: 10px;" onchange="previewImages()">
-                    
-                    <!-- ✨ 圖片預覽顯示區域 -->
                     <div id="imagePreviewContainer" class="preview-container"></div>
-                    
                     <button type="button" id="btnDelayedUpload" onclick="uploadDelayedImages()">確認上傳</button>
                 </div>
             </div>
@@ -139,9 +127,17 @@
         
         let currentLineName = "未登入"; 
         let currentSource = "網頁";
-        
         let myRecordsCache = null; 
         let classListCache = {};
+
+        // ✨ 統一的 Fetch 發送函數 (加入防 CORS 阻擋設定)
+        async function sendToGas(payload) {
+            return await fetch(GAS_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" }, // 避免 iOS 阻擋
+                body: JSON.stringify(payload)
+            }).then(res => res.json());
+        }
 
         async function initializeLiff() {
             try {
@@ -184,13 +180,9 @@
             if(page === 'view') fetchClassList();
         }
 
-        // ==========================================
-        // 背景預先載入邏輯
-        // ==========================================
         async function bgFetchMyRecords() {
             try {
-                let res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "getMyRecords", lineName: currentLineName }) });
-                let result = await res.json();
+                let result = await sendToGas({ action: "getMyRecords", lineName: currentLineName });
                 if (result.success) {
                     myRecordsCache = result.records;
                     renderMyRecordsDropdowns();
@@ -226,7 +218,6 @@
                 editSelect.innerHTML = '<option value="">找不到您的報名紀錄</option>';
             }
             
-            // 重置區塊與預覽
             document.getElementById("upload-section").style.display = "none";
             document.getElementById("edit-section").style.display = "none";
             clearImagePreview(); 
@@ -235,42 +226,28 @@
         function handleUploadSelect() {
             const val = document.getElementById('myRecordsSelect').value;
             document.getElementById('upload-section').style.display = val ? 'block' : 'none';
-            clearImagePreview(); // 切換紀錄時清空舊預覽
+            clearImagePreview(); 
         }
 
-        // ==========================================
-        // ✨ 新增：圖片預覽功能
-        // ==========================================
         function previewImages() {
             const previewContainer = document.getElementById('imagePreviewContainer');
             const fileInput = document.getElementById('delayedImageUpload');
-            
-            // 每次選擇新檔案時，先清空之前的預覽
             previewContainer.innerHTML = '';
             
             const files = fileInput.files;
             if (files.length === 0) return;
-            
             if (files.length > 5) {
                 alert("提醒：最多只能上傳 5 張圖片！請重新選擇。");
-                fileInput.value = ""; // 清空選擇
-                return;
+                fileInput.value = ""; return;
             }
 
-            // 讀取並顯示圖片
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
-                if (!file.type.startsWith('image/')) continue; // 確保是圖片
-                
+                if (!file.type.startsWith('image/')) continue;
                 const img = document.createElement('img');
                 img.className = 'preview-img';
                 img.src = URL.createObjectURL(file);
-                
-                // 釋放記憶體
-                img.onload = function() {
-                    URL.revokeObjectURL(img.src);
-                }
-                
+                img.onload = function() { URL.revokeObjectURL(img.src); }
                 previewContainer.appendChild(img);
             }
         }
@@ -280,9 +257,6 @@
             document.getElementById("imagePreviewContainer").innerHTML = "";
         }
 
-        // ==========================================
-        // 表單送出邏輯
-        // ==========================================
         async function submitRegistration() {
             if (!checkLineStatus()) return;
             const name = document.getElementById("inputName").value;
@@ -295,14 +269,13 @@
 
             const payload = { action: "register", lineName: currentLineName, source: currentSource, name: name, quantity: qty, targetClass: document.getElementById("selectClass").value };
             try {
-                let res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
-                let result = await res.json();
+                let result = await sendToGas(payload);
                 if (result.success) { 
                     alert("報名成功！"); 
                     bgFetchMyRecords(); 
                     switchPage('upload'); 
                 } else alert(result.message);
-            } catch (err) { alert("網路錯誤"); }
+            } catch (err) { alert("連線異常，但資料可能已寫入，請至「修改」分頁確認。\n(" + err.message + ")"); }
             btn.innerText = "提交報名"; btn.disabled = false;
         }
 
@@ -336,14 +309,13 @@
             };
 
             try {
-                let res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
-                let result = await res.json();
+                let result = await sendToGas(payload);
                 alert(result.message);
                 if(result.success) { 
                     document.getElementById("edit-section").style.display = "none"; 
                     bgFetchMyRecords(); 
                 }
-            } catch (err) { alert("修改發生錯誤"); }
+            } catch (err) { alert("連線異常，但修改可能已完成，請重新整理確認。\n(" + err.message + ")"); }
             btn.innerText = "儲存修改"; btn.disabled = false;
         }
 
@@ -366,21 +338,15 @@
                     imagesData.push({ base64: await compressImage(fileInput.files[i]) });
                 }
                 const payload = { action: "upload", orderId: recordData.orderId, targetClass: recordData.targetClass, lineName: currentLineName, images: imagesData };
-                let res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
-                let result = await res.json();
+                let result = await sendToGas(payload);
                 alert(result.message);
                 
-                if (result.success) {
-                    clearImagePreview(); // 上傳成功後清空預覽和選擇
-                }
-            } catch (err) { alert("上傳失敗"); }
+                if (result.success) clearImagePreview();
+            } catch (err) { alert("連線異常，請確認檔案是否太大或網路不穩。\n(" + err.message + ")"); }
             
             btn.innerText = "確認上傳"; btn.disabled = false;
         }
 
-        // ==========================================
-        // 各班名單快取邏輯
-        // ==========================================
         async function fetchClassList() {
             const targetClass = document.getElementById("viewClassSelect").value;
             const listDiv = document.getElementById("list-result");
@@ -397,8 +363,7 @@
 
         async function bgFetchClassList(targetClass) {
             try {
-                let res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "getList", targetClass: targetClass }) });
-                let result = await res.json();
+                let result = await sendToGas({ action: "getList", targetClass: targetClass });
                 if (result.success) {
                     classListCache[targetClass] = result.list;
                     if(document.getElementById("viewClassSelect").value === targetClass && document.getElementById('page-view').classList.contains('active')) {
