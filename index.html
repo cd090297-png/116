@@ -3,51 +3,37 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
-    <title>116開運手鍊報名</title>
+    <title>活動報名系統</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-<style>
+    <style>
         /* ✨ 柔和明亮護眼主題 */
         :root { 
-            --primary: #388E3C;     /* 柔和且深一點的森林綠 */
-            --bg: #F4F6F8;          /* 微暖灰的柔和白底，眼睛不易疲勞 */
-            --card: #FFFFFF;        /* 乾淨的白色區塊 */
-            --text: #333333;        /* 深灰黑字體 (比純黑柔和) */
-            --text-muted: #666666;  /* 輔助說明文字灰 */
-            --border: #E0E0E0;      /* 淡淡的分隔線 */
-            --input-bg: #FAFAFA;    /* 輸入框微灰白底色 */
+            --primary: #388E3C; 
+            --bg: #F4F6F8; 
+            --card: #FFFFFF; 
+            --text: #333333; 
+            --text-muted: #666666; 
+            --border: #E0E0E0; 
+            --input-bg: #FAFAFA; 
         }
-        
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 0; padding-bottom: 70px; }
-        
-        /* 頂部標題改為綠底白字，看起來更專業乾淨 */
         .header { background-color: var(--primary); color: white; padding: 15px; text-align: center; font-size: 18px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        
         .container { padding: 15px; }
-        
-        /* 卡片陰影調淡，看起來更輕盈 */
         .card { background-color: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 15px; }
         .form-group { margin-bottom: 15px; }
         label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 14px; color: var(--text-muted); }
-        
         input[type="text"], input[type="number"], select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; font-size: 16px; background-color: var(--input-bg); color: var(--text); }
         input[type="file"] { color: var(--text-muted); }
-        
         button { width: 100%; background-color: var(--primary); color: white; border: none; padding: 14px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: background-color 0.2s; }
-        
-        /* 其他狀態按鈕配色 */
         button.btn-secondary { background-color: #E2E8F0; color: #333333; }
         button.btn-warning { background-color: #F57C00; color: white; }
         button:disabled { background-color: #D6D6D6; color: #999999; }
-        
-        /* 底部導覽列 */
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); border-top: 1px solid var(--border); }
         .nav-item { flex: 1; text-align: center; padding: 10px 0; font-size: 12px; color: var(--text-muted); font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
         .nav-item.active { color: var(--primary); border-top: 3px solid var(--primary); margin-top: -1px; }
         .nav-icon { font-size: 20px; margin-bottom: 3px; }
-        
         .page { display: none; }
         .page.active { display: block; }
-        
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
         th { background-color: #F5F7F9; color: var(--text); }
@@ -79,8 +65,8 @@
             <div class="card">
                 <div class="form-group">
                     <label>選擇報名紀錄以補傳圖片</label>
-                    <select id="myRecordsSelect"><option value="">請點擊下方載入...</option></select>
-                    <button type="button" class="btn-secondary" onclick="fetchMyRecords('upload')">🔄 載入紀錄</button>
+                    <select id="myRecordsSelect" onchange="handleUploadSelect()"><option value="">背景載入中...</option></select>
+                    <button type="button" class="btn-secondary" onclick="forceReloadRecords()">🔄 強制重新載入</button>
                 </div>
                 <div id="upload-section" style="display:none; border-top: 1px dashed var(--border); padding-top: 20px;">
                     <input type="file" id="delayedImageUpload" accept="image/*" multiple style="margin-bottom: 15px;">
@@ -94,8 +80,8 @@
             <div class="card">
                 <div class="form-group">
                     <label>選擇要修改的紀錄</label>
-                    <select id="editRecordsSelect"><option value="">請點擊下方載入...</option></select>
-                    <button type="button" class="btn-secondary" onclick="fetchMyRecords('edit')">🔄 載入紀錄</button>
+                    <select id="editRecordsSelect" onchange="loadEditData()"><option value="">背景載入中...</option></select>
+                    <button type="button" class="btn-secondary" onclick="forceReloadRecords()">🔄 強制重新載入</button>
                 </div>
                 <div id="edit-section" style="display:none; border-top: 1px dashed var(--border); padding-top: 20px;">
                     <input type="hidden" id="editOrderId">
@@ -122,7 +108,7 @@
                         <option value="A">A班</option><option value="B">B班</option><option value="C">C班</option><option value="D">D班</option><option value="E">E班</option><option value="F">F班</option><option value="G">G班</option><option value="H">H班</option>
                     </select>
                 </div>
-                <div id="list-result"><p style="text-align: center; color: var(--text-muted);">請選擇班級</p></div>
+                <div id="list-result"><p style="text-align: center; color: var(--text-muted);">載入中...</p></div>
             </div>
         </div>
     </div>
@@ -137,15 +123,18 @@
 
     <script>
         // ==========================================
-        // ⚠️ 請小心替換以下兩行設定，絕對不要刪到引號！
-        // ==========================================
         const LIFF_ID = "2011959696-d1Lkeojo"; 
         const GAS_URL = "https://script.google.com/macros/s/AKfycbzyLksHBQkGF9e3GrjnZJwEzqKg5F7qU8nb9zdt8xSwIKhQHevccfqt5Uu2PioAAjmK/exec";
         // ==========================================
         
-        let currentLineName = "未登入"; let currentSource = "網頁";
-        let loadedRecords = [];
+        let currentLineName = "未登入"; 
+        let currentSource = "網頁";
+        
+        // ✨ 快取變數 (存放預先載入的資料)
+        let myRecordsCache = null; 
+        let classListCache = {};
 
+        // 1. 啟動與預載
         async function initializeLiff() {
             try {
                 await liff.init({ liffId: LIFF_ID });
@@ -156,6 +145,10 @@
                     currentLineName = profile.displayName;
                     currentSource = liff.getOS();
                     document.getElementById("profileName").innerText = currentLineName;
+                    
+                    // ✨ 抓到名稱後，立刻在背景偷偷抓資料！
+                    bgFetchMyRecords();
+                    bgFetchClassList("A"); 
                 }
             } catch (err) {
                 alert("LINE 連線發生錯誤：\n" + err.message);
@@ -181,11 +174,76 @@
             const titles = { 'register':'活動報名', 'upload':'補傳圖片', 'edit':'修改資料', 'view':'各班名單查詢' };
             document.getElementById('headerTitle').innerText = titles[page];
             
-            if(page === 'upload') fetchMyRecords('upload');
-            if(page === 'edit') fetchMyRecords('edit');
+            // 由於有快取，切換頁面不再強制抓取，只需顯示即可
             if(page === 'view') fetchClassList();
         }
 
+        // ==========================================
+        // ✨ 背景預先載入邏輯 (加速核心)
+        // ==========================================
+        async function bgFetchMyRecords() {
+            try {
+                let res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "getMyRecords", lineName: currentLineName }) });
+                let result = await res.json();
+                if (result.success) {
+                    myRecordsCache = result.records;
+                    renderMyRecordsDropdowns();
+                } else myRecordsCache = [];
+            } catch (e) { myRecordsCache = []; }
+        }
+
+        async function forceReloadRecords() {
+            document.getElementById("myRecordsSelect").innerHTML = '<option value="">重新載入中...</option>';
+            document.getElementById("editRecordsSelect").innerHTML = '<option value="">重新載入中...</option>';
+            await bgFetchMyRecords();
+        }
+
+        function renderMyRecordsDropdowns() {
+            const uploadSelect = document.getElementById("myRecordsSelect");
+            const editSelect = document.getElementById("editRecordsSelect");
+            
+            if (myRecordsCache && myRecordsCache.length > 0) {
+                let uploadHtml = '<option value="">請選擇一筆紀錄...</option>';
+                let editHtml = '<option value="">請選擇一筆紀錄...</option>';
+                
+                myRecordsCache.forEach((rec, idx) => {
+                    let rawClass = rec.className.replace("班", "");
+                    let upVal = JSON.stringify({ orderId: rec.orderId, targetClass: rawClass });
+                    uploadHtml += `<option value='${upVal}'>${rec.className} - ${rec.name}</option>`;
+                    editHtml += `<option value='${idx}'>${rec.className} - ${rec.name}</option>`;
+                });
+                
+                uploadSelect.innerHTML = uploadHtml;
+                editSelect.innerHTML = editHtml;
+            } else {
+                uploadSelect.innerHTML = '<option value="">找不到您的報名紀錄</option>';
+                editSelect.innerHTML = '<option value="">找不到您的報名紀錄</option>';
+            }
+            // 重置顯示區塊
+            document.getElementById("upload-section").style.display = "none";
+            document.getElementById("edit-section").style.display = "none";
+        }
+
+        function handleUploadSelect() {
+            const val = document.getElementById('myRecordsSelect').value;
+            document.getElementById('upload-section').style.display = val ? 'block' : 'none';
+        }
+
+        function loadEditData() {
+            const idx = document.getElementById("editRecordsSelect").value;
+            if(idx === "") { document.getElementById("edit-section").style.display = "none"; return; }
+            const rec = myRecordsCache[idx];
+            document.getElementById("editOrderId").value = rec.orderId;
+            document.getElementById("editOldClass").value = rec.className.replace("班", "");
+            document.getElementById("editName").value = rec.name;
+            document.getElementById("editQty").value = rec.quantity;
+            document.getElementById("editClass").value = rec.className.replace("班", "");
+            document.getElementById("edit-section").style.display = "block";
+        }
+
+        // ==========================================
+        // ✨ 表單送出邏輯 (包含更新快取)
+        // ==========================================
         async function submitRegistration() {
             if (!checkLineStatus()) return;
             const name = document.getElementById("inputName").value;
@@ -200,54 +258,13 @@
             try {
                 let res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
                 let result = await res.json();
-                if (result.success) { alert("報名成功！"); switchPage('upload'); } else alert(result.message);
+                if (result.success) { 
+                    alert("報名成功！"); 
+                    bgFetchMyRecords(); // 成功後自動重抓資料更新快取
+                    switchPage('upload'); 
+                } else alert(result.message);
             } catch (err) { alert("網路錯誤"); }
             btn.innerText = "提交報名"; btn.disabled = false;
-        }
-
-        async function fetchMyRecords(mode) {
-            if (!checkLineStatus()) return;
-            const selectId = mode === 'upload' ? "myRecordsSelect" : "editRecordsSelect";
-            const select = document.getElementById(selectId);
-            select.innerHTML = '<option value="">載入中...</option>';
-            if(mode === 'upload') document.getElementById("upload-section").style.display = "none";
-            if(mode === 'edit') document.getElementById("edit-section").style.display = "none";
-
-            try {
-                let res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "getMyRecords", lineName: currentLineName }) });
-                let result = await res.json();
-                if (result.success && result.records.length > 0) {
-                    loadedRecords = result.records;
-                    select.innerHTML = '<option value="">請選擇一筆紀錄...</option>';
-                    result.records.forEach((rec, idx) => {
-                        let rawClass = rec.className.replace("班", "");
-                        let optionVal = mode === 'upload' ? JSON.stringify({ orderId: rec.orderId, targetClass: rawClass }) : idx;
-                        select.innerHTML += `<option value='${optionVal}'>${rec.className} - ${rec.name}</option>`;
-                    });
-                    
-                    select.onchange = function() {
-                        if(this.value !== "") {
-                            if(mode === 'upload') document.getElementById("upload-section").style.display = "block";
-                            if(mode === 'edit') loadEditData();
-                        } else {
-                            if(mode === 'upload') document.getElementById("upload-section").style.display = "none";
-                            if(mode === 'edit') document.getElementById("edit-section").style.display = "none";
-                        }
-                    };
-                } else select.innerHTML = '<option value="">找不到紀錄</option>';
-            } catch (err) { select.innerHTML = '<option value="">讀取失敗</option>'; }
-        }
-
-        function loadEditData() {
-            const idx = document.getElementById("editRecordsSelect").value;
-            if(idx === "") { document.getElementById("edit-section").style.display = "none"; return; }
-            const rec = loadedRecords[idx];
-            document.getElementById("editOrderId").value = rec.orderId;
-            document.getElementById("editOldClass").value = rec.className.replace("班", "");
-            document.getElementById("editName").value = rec.name;
-            document.getElementById("editQty").value = rec.quantity;
-            document.getElementById("editClass").value = rec.className.replace("班", "");
-            document.getElementById("edit-section").style.display = "block";
         }
 
         async function submitEdit() {
@@ -271,7 +288,10 @@
                 let res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
                 let result = await res.json();
                 alert(result.message);
-                if(result.success) { document.getElementById("edit-section").style.display = "none"; fetchMyRecords('edit'); }
+                if(result.success) { 
+                    document.getElementById("edit-section").style.display = "none"; 
+                    bgFetchMyRecords(); // 自動更新快取
+                }
             } catch (err) { alert("修改發生錯誤"); }
             btn.innerText = "儲存修改"; btn.disabled = false;
         }
@@ -284,7 +304,7 @@
             const fileInput = document.getElementById("delayedImageUpload");
             if (fileInput.files.length === 0) return alert("請選擇圖片");
             const btn = document.getElementById("btnDelayedUpload");
-            btn.innerText = "上傳中..."; btn.disabled = true;
+            btn.innerText = "上傳中 (這可能需要幾秒鐘)..."; btn.disabled = true;
 
             try {
                 let imagesData = [];
@@ -297,22 +317,47 @@
                 alert(result.message);
             } catch (err) { alert("上傳失敗"); }
             btn.innerText = "確認上傳"; btn.disabled = false;
+            document.getElementById("delayedImageUpload").value = ""; // 清空選擇的檔案
         }
 
+        // ==========================================
+        // ✨ 各班名單快取邏輯
+        // ==========================================
         async function fetchClassList() {
             const targetClass = document.getElementById("viewClassSelect").value;
             const listDiv = document.getElementById("list-result");
-            listDiv.innerHTML = "<p style='text-align:center; color: var(--text-muted);'>載入中...</p>";
+            
+            // 如果已經抓過該班級，直接用快取秒顯，並在背景偷偷更新
+            if (classListCache[targetClass]) {
+                renderClassTable(classListCache[targetClass]);
+                bgFetchClassList(targetClass); 
+                return;
+            }
+
+            listDiv.innerHTML = "<p style='text-align:center; color: var(--text-muted);'>資料載入中...</p>";
+            await bgFetchClassList(targetClass);
+        }
+
+        async function bgFetchClassList(targetClass) {
             try {
                 let res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "getList", targetClass: targetClass }) });
                 let result = await res.json();
                 if (result.success) {
-                    let html = `<table><tr><th>序號</th><th>LINE名稱</th><th>圖片數</th></tr>`;
-                    if (result.list.length === 0) html += `<tr><td colspan="3" style="text-align:center;">無人報名</td></tr>`;
-                    else result.list.forEach(item => { html += `<tr><td>${item.seq}</td><td>${item.lineName}</td><td style="text-align:center; color:var(--primary); font-weight:bold;">${item.imgCount} 張</td></tr>`; });
-                    listDiv.innerHTML = html + `</table>`;
-                } else listDiv.innerHTML = `<p style='color:#ff6b6b;'>無法載入</p>`;
-            } catch (err) { listDiv.innerHTML = `<p style='color:#ff6b6b;'>連線錯誤</p>`; }
+                    classListCache[targetClass] = result.list;
+                    // 如果目前停留在該班級，才重新渲染表格
+                    if(document.getElementById("viewClassSelect").value === targetClass && document.getElementById('page-view').classList.contains('active')) {
+                        renderClassTable(result.list);
+                    }
+                }
+            } catch(e) {}
+        }
+
+        function renderClassTable(list) {
+            const listDiv = document.getElementById("list-result");
+            let html = `<table><tr><th>序號</th><th>LINE名稱</th><th>圖片數</th></tr>`;
+            if (list.length === 0) html += `<tr><td colspan="3" style="text-align:center;">無人報名</td></tr>`;
+            else list.forEach(item => { html += `<tr><td>${item.seq}</td><td>${item.lineName}</td><td style="text-align:center; color:var(--primary); font-weight:bold;">${item.imgCount} 張</td></tr>`; });
+            listDiv.innerHTML = html + `</table>`;
         }
 
         function compressImage(file) {
