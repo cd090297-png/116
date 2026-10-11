@@ -3,243 +3,138 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
-    <title>116開運手鍊報名系統</title>
+    <title>活動圖片上傳系統</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         :root { 
             --primary: #388E3C; --bg: #F4F6F8; --card: #FFFFFF; 
             --text: #333333; --text-muted: #666666; --border: #E0E0E0; --input-bg: #FAFAFA; 
+            --success: #2e7d32;
         }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 0; padding-bottom: 70px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 0; }
         .header { background-color: var(--primary); color: white; padding: 15px; text-align: center; font-size: 18px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .container { padding: 15px; }
-        .card { background-color: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 15px; }
+        .container { padding: 15px; max-width: 500px; margin: 0 auto; }
+        .card { background-color: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); transition: opacity 0.3s ease; }
+        
         .form-group { margin-bottom: 15px; }
         label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 14px; color: var(--text-muted); }
-        input[type="text"], input[type="number"], select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; font-size: 16px; background-color: var(--input-bg); color: var(--text); }
-        input[type="file"] { color: var(--text-muted); font-size: 14px; }
-        button { width: 100%; background-color: var(--primary); color: white; border: none; padding: 14px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: background-color 0.2s; }
-        button.btn-secondary { background-color: #E2E8F0; color: #333333; }
-        button.btn-warning { background-color: #F57C00; color: white; }
-        button:disabled { background-color: #D6D6D6; color: #999999; }
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); border-top: 1px solid var(--border); }
-        .nav-item { flex: 1; text-align: center; padding: 10px 0; font-size: 12px; color: var(--text-muted); font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
-        .nav-item.active { color: var(--primary); border-top: 3px solid var(--primary); margin-top: -1px; }
-        .nav-icon { font-size: 20px; margin-bottom: 3px; }
-        .page { display: none; }
-        .page.active { display: block; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
-        th { background-color: #F5F7F9; color: var(--text); }
+        input[type="text"], select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; font-size: 16px; background-color: var(--input-bg); color: var(--text); }
+        input[type="file"] { color: var(--text-muted); font-size: 14px; padding: 10px 0; }
         
-        /* ✨ 圖片預覽區塊改為滿版向下排列 */
-        .preview-container { display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px; }
+        button { width: 100%; background-color: var(--primary); color: white; border: none; padding: 14px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background-color 0.2s; }
+        button:disabled { background-color: #D6D6D6; color: #999999; }
+        button.btn-outline { background-color: transparent; border: 2px solid var(--primary); color: var(--primary); margin-top: 15px; }
+        
+        /* 滿版圖片預覽 */
+        .preview-container { display: flex; flex-direction: column; gap: 12px; margin-bottom: 10px; }
         .preview-img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        /* 狀態提示 */
+        #statusText { text-align: center; font-size: 14px; font-weight: bold; margin-top: 15px; min-height: 20px; }
+        .text-error { color: #d32f2f; }
+        .text-info { color: var(--primary); }
+        
+        /* 成功畫面區塊 */
+        #successCard { display: none; text-align: center; padding: 40px 20px; }
+        .success-icon { font-size: 60px; margin-bottom: 15px; }
+        .success-title { color: var(--success); font-size: 22px; margin-bottom: 10px; font-weight: bold; }
+        .success-desc { color: var(--text-muted); font-size: 15px; margin-bottom: 25px; line-height: 1.5; }
     </style>
 </head>
 <body>
 
-    <div class="header" id="headerTitle">活動報名</div>
+    <div class="header">活動圖片上傳</div>
 
     <div class="container">
-        <!-- 報名表單 -->
-        <div id="page-register" class="page active">
-            <div class="card">
-                <p>您好，<span id="profileName" style="color: var(--primary); font-weight:bold;">連線 LINE 中...</span></p>
-                <div class="form-group"><label>姓名</label><input type="text" id="inputName" required></div>
-                <div class="form-group"><label>數量 (最多4個)</label><input type="number" id="inputQty" value="1" min="1" max="4" required></div>
-                <div class="form-group">
-                    <label>選擇班別</label>
-                    <select id="selectClass">
-                        <option value="A">A班 (限量20名)</option><option value="B">B班 (限量20名)</option><option value="C">C班 (限量20名)</option><option value="D">D班 (限量20名)</option><option value="E">E班 (限量20名)</option><option value="F">F班 (限量20名)</option><option value="G">G班 (限量20名)</option><option value="H">H班 (限量20名)</option>
-                    </select>
-                </div>
-                <button type="button" id="btnSubmit" onclick="submitRegistration()">提交報名</button>
+        <!-- 填寫與上傳表單區塊 -->
+        <div class="card" id="formCard">
+            <p style="text-align: center; margin-top: 0; margin-bottom: 20px;">您好，<span id="profileName" style="color: var(--primary); font-weight:bold;">準備就緒</span></p>
+            
+            <div class="form-group">
+                <label>報名班別</label>
+                <select id="selectClass">
+                    <option value="A">A班</option><option value="B">B班</option><option value="C">C班</option><option value="D">D班</option>
+                    <option value="E">E班</option><option value="F">F班</option><option value="G">G班</option><option value="H">H班</option>
+                </select>
             </div>
+
+            <div class="form-group">
+                <label>您的報名序號</label>
+                <select id="selectSeq">
+                    <option value="1">1 號</option><option value="2">2 號</option><option value="3">3 號</option><option value="4">4 號</option>
+                    <option value="5">5 號</option><option value="6">6 號</option><option value="7">7 號</option><option value="8">8 號</option>
+                    <option value="9">9 號</option><option value="10">10 號</option><option value="11">11 號</option><option value="12">12 號</option>
+                    <option value="13">13 號</option><option value="14">14 號</option><option value="15">15 號</option><option value="16">16 號</option>
+                    <option value="17">17 號</option><option value="18">18 號</option><option value="19">19 號</option><option value="20">20 號</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>報名姓名</label>
+                <input type="text" id="inputName" placeholder="請輸入您報名時的姓名" required>
+            </div>
+
+            <div class="form-group">
+                <label>上傳圖片 (最多 5 張)</label>
+                <input type="file" id="imageUpload" accept="image/*" multiple onchange="previewImages()">
+                <div id="imagePreviewContainer" class="preview-container"></div>
+            </div>
+
+            <button type="button" id="btnSubmit" onclick="submitForm()">確認上傳</button>
+            <div id="statusText"></div> <!-- 進度提示會顯示在這裡 -->
         </div>
 
-        <!-- 補傳圖片 -->
-        <div id="page-upload" class="page">
-            <div class="card">
-                <div class="form-group">
-                    <label>選擇報名紀錄以補傳圖片</label>
-                    <select id="myRecordsSelect" onchange="handleUploadSelect()"><option value="">背景載入中...</option></select>
-                    <button type="button" class="btn-secondary" onclick="forceReloadRecords()">🔄 強制重新載入</button>
-                </div>
-                <div id="upload-section" style="display:none; border-top: 1px dashed var(--border); padding-top: 20px;">
-                    <label style="color: var(--primary);">請選擇要上傳的圖片 (最多5張)</label>
-                    <input type="file" id="delayedImageUpload" accept="image/*" multiple style="margin-bottom: 10px;" onchange="previewImages()">
-                    <div id="imagePreviewContainer" class="preview-container"></div>
-                    <button type="button" id="btnDelayedUpload" onclick="uploadDelayedImages()">確認上傳</button>
-                </div>
-            </div>
+        <!-- 成功完成區塊 (預設隱藏) -->
+        <div class="card" id="successCard">
+            <div class="success-icon">✅</div>
+            <div class="success-title">上傳成功！</div>
+            <div class="success-desc">您的圖片已完整儲存至雲端。<br>感謝您的配合！</div>
+            <button type="button" class="btn-outline" onclick="resetForm()">返回重新上傳</button>
         </div>
-
-        <!-- 修改資料 -->
-        <div id="page-edit" class="page">
-            <div class="card">
-                <div class="form-group">
-                    <label>選擇要修改的紀錄</label>
-                    <select id="editRecordsSelect" onchange="loadEditData()"><option value="">背景載入中...</option></select>
-                    <button type="button" class="btn-secondary" onclick="forceReloadRecords()">🔄 強制重新載入</button>
-                </div>
-                <div id="edit-section" style="display:none; border-top: 1px dashed var(--border); padding-top: 20px;">
-                    <input type="hidden" id="editOrderId">
-                    <input type="hidden" id="editOldClass">
-                    <div class="form-group"><label>新姓名</label><input type="text" id="editName"></div>
-                    <div class="form-group"><label>新數量 (最多4個)</label><input type="number" id="editQty" min="1" max="4" required></div>
-                    <div class="form-group">
-                        <label>新班別</label>
-                        <select id="editClass">
-                            <option value="A">A班</option><option value="B">B班</option><option value="C">C班</option><option value="D">D班</option><option value="E">E班</option><option value="F">F班</option><option value="G">G班</option><option value="H">H班</option>
-                        </select>
-                    </div>
-                    <button type="button" class="btn-warning" id="btnEdit" onclick="submitEdit()">儲存修改</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 查詢名單 -->
-        <div id="page-view" class="page">
-            <div class="card">
-                <div class="form-group">
-                    <label>查詢班級</label>
-                    <select id="viewClassSelect" onchange="fetchClassList()">
-                        <option value="A">A班</option><option value="B">B班</option><option value="C">C班</option><option value="D">D班</option><option value="E">E班</option><option value="F">F班</option><option value="G">G班</option><option value="H">H班</option>
-                    </select>
-                </div>
-                <div id="list-result"><p style="text-align: center; color: var(--text-muted);">載入中...</p></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 底部導覽列 -->
-    <div class="bottom-nav">
-        <div class="nav-item active" id="nav-register" onclick="switchPage('register')"><span class="nav-icon">📝</span>填寫</div>
-        <div class="nav-item" id="nav-upload" onclick="switchPage('upload')"><span class="nav-icon">📤</span>補傳</div>
-        <div class="nav-item" id="nav-edit" onclick="switchPage('edit')"><span class="nav-icon">✏️</span>修改</div>
-        <div class="nav-item" id="nav-view" onclick="switchPage('view')"><span class="nav-icon">📋</span>名單</div>
     </div>
 
     <script>
         // ==========================================
         const LIFF_ID = "2011959696-d1Lkeojo"; 
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbzyLksHBQkGF9e3GrjnZJwEzqKg5F7qU8nb9zdt8xSwIKhQHevccfqt5Uu2PioAAjmK/exec";
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbzH2D3oAQqZyp5fVi0Vt72V8wzFgLphh4a0iJthV_vraJFmuu9_RcoC19cEzjMmvS4Nkw/exec";
         // ==========================================
         
         let currentLineName = "未登入"; 
-        let currentSource = "網頁";
-        let myRecordsCache = null; 
-        let classListCache = {};
-
-        async function sendToGas(payload) {
-            return await fetch(GAS_URL, {
-                method: "POST",
-                headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-                body: JSON.stringify(payload)
-            }).then(res => res.json());
-        }
 
         async function initializeLiff() {
             try {
                 await liff.init({ liffId: LIFF_ID });
-                if (!liff.isLoggedIn()) {
-                    liff.login();
-                } else {
+                if (liff.isLoggedIn()) {
                     const profile = await liff.getProfile();
                     currentLineName = profile.displayName;
-                    currentSource = liff.getOS();
                     document.getElementById("profileName").innerText = currentLineName;
-                    
-                    bgFetchMyRecords();
-                    bgFetchClassList("A"); 
+                } else {
+                    liff.login();
                 }
             } catch (err) {
-                alert("LINE 連線發生錯誤：\n" + err.message);
-                document.getElementById("profileName").innerText = "連線失敗";
+                console.log("LIFF 未連線，但不影響一般瀏覽器上傳");
             }
         }
         initializeLiff();
 
-        function checkLineStatus() {
-            if (currentLineName === "未登入" || currentLineName === "連線失敗") {
-                alert("⚠️ 尚未成功讀取您的 LINE 帳號，請重新整理頁面！");
-                return false;
-            }
-            return true;
-        }
-
-        function switchPage(page) {
-            document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            document.getElementById('page-' + page).classList.add('active');
-            document.getElementById('nav-' + page).classList.add('active');
-            
-            const titles = { 'register':'活動報名', 'upload':'補傳圖片', 'edit':'修改資料', 'view':'各班名單查詢' };
-            document.getElementById('headerTitle').innerText = titles[page];
-            
-            if(page === 'view') fetchClassList();
-        }
-
-        async function bgFetchMyRecords() {
-            try {
-                let result = await sendToGas({ action: "getMyRecords", lineName: currentLineName });
-                if (result.success) {
-                    myRecordsCache = result.records;
-                    renderMyRecordsDropdowns();
-                } else myRecordsCache = [];
-            } catch (e) { myRecordsCache = []; }
-        }
-
-        async function forceReloadRecords() {
-            document.getElementById("myRecordsSelect").innerHTML = '<option value="">重新載入中...</option>';
-            document.getElementById("editRecordsSelect").innerHTML = '<option value="">重新載入中...</option>';
-            await bgFetchMyRecords();
-        }
-
-        function renderMyRecordsDropdowns() {
-            const uploadSelect = document.getElementById("myRecordsSelect");
-            const editSelect = document.getElementById("editRecordsSelect");
-            
-            if (myRecordsCache && myRecordsCache.length > 0) {
-                let uploadHtml = '<option value="">請選擇一筆紀錄...</option>';
-                let editHtml = '<option value="">請選擇一筆紀錄...</option>';
-                
-                myRecordsCache.forEach((rec, idx) => {
-                    let rawClass = rec.className.replace("班", "");
-                    let upVal = JSON.stringify({ orderId: rec.orderId, targetClass: rawClass });
-                    uploadHtml += `<option value='${upVal}'>${rec.className} - ${rec.name}</option>`;
-                    editHtml += `<option value='${idx}'>${rec.className} - ${rec.name}</option>`;
-                });
-                
-                uploadSelect.innerHTML = uploadHtml;
-                editSelect.innerHTML = editHtml;
-            } else {
-                uploadSelect.innerHTML = '<option value="">找不到您的報名紀錄</option>';
-                editSelect.innerHTML = '<option value="">找不到您的報名紀錄</option>';
-            }
-            
-            document.getElementById("upload-section").style.display = "none";
-            document.getElementById("edit-section").style.display = "none";
-            clearImagePreview(); 
-        }
-
-        function handleUploadSelect() {
-            const val = document.getElementById('myRecordsSelect').value;
-            document.getElementById('upload-section').style.display = val ? 'block' : 'none';
-            clearImagePreview(); 
+        function showStatus(msg, type) {
+            const statusEl = document.getElementById("statusText");
+            statusEl.innerText = msg;
+            statusEl.className = type === "error" ? "text-error" : "text-info";
         }
 
         function previewImages() {
             const previewContainer = document.getElementById('imagePreviewContainer');
-            const fileInput = document.getElementById('delayedImageUpload');
+            const fileInput = document.getElementById('imageUpload');
             previewContainer.innerHTML = '';
+            showStatus("", ""); 
             
             const files = fileInput.files;
             if (files.length === 0) return;
             if (files.length > 5) {
-                alert("提醒：最多只能上傳 5 張圖片！請重新選擇。");
-                fileInput.value = ""; return;
+                showStatus("⚠️ 最多只能上傳 5 張圖片！請重新選擇。", "error");
+                fileInput.value = ""; 
+                return;
             }
 
             for (let i = 0; i < files.length; i++) {
@@ -253,134 +148,64 @@
             }
         }
 
-        function clearImagePreview() {
-            document.getElementById("delayedImageUpload").value = "";
-            document.getElementById("imagePreviewContainer").innerHTML = "";
-        }
-
-        async function submitRegistration() {
-            if (!checkLineStatus()) return;
-            const name = document.getElementById("inputName").value;
-            const qty = parseInt(document.getElementById("inputQty").value);
-            if(!name) return alert("請輸入姓名！");
-            if(qty > 4) return alert("每人最多只能報名 4 個數量！");
+        async function submitForm() {
+            const name = document.getElementById("inputName").value.trim();
+            const targetClass = document.getElementById("selectClass").value;
+            const seqNumber = document.getElementById("selectSeq").value;
+            const fileInput = document.getElementById("imageUpload");
             
+            if(!name) return showStatus("⚠️ 請輸入報名姓名！", "error");
+            if(fileInput.files.length === 0) return showStatus("⚠️ 請至少選擇一張圖片！", "error");
+
             const btn = document.getElementById("btnSubmit");
-            btn.innerText = "傳送中..."; btn.disabled = true;
-
-            const payload = { action: "register", lineName: currentLineName, source: currentSource, name: name, quantity: qty, targetClass: document.getElementById("selectClass").value };
-            try {
-                let result = await sendToGas(payload);
-                if (result.success) { 
-                    alert("報名成功！"); 
-                    bgFetchMyRecords(); 
-                    switchPage('upload'); 
-                } else alert(result.message);
-            } catch (err) { alert("連線異常，但資料可能已寫入，請至「修改」分頁確認。\n(" + err.message + ")"); }
-            btn.innerText = "提交報名"; btn.disabled = false;
-        }
-
-        function loadEditData() {
-            const idx = document.getElementById("editRecordsSelect").value;
-            if(idx === "") { document.getElementById("edit-section").style.display = "none"; return; }
-            const rec = myRecordsCache[idx];
-            document.getElementById("editOrderId").value = rec.orderId;
-            document.getElementById("editOldClass").value = rec.className.replace("班", "");
-            document.getElementById("editName").value = rec.name;
-            document.getElementById("editQty").value = rec.quantity;
-            document.getElementById("editClass").value = rec.className.replace("班", "");
-            document.getElementById("edit-section").style.display = "block";
-        }
-
-        async function submitEdit() {
-            if (!checkLineStatus()) return;
-            const editQty = parseInt(document.getElementById("editQty").value);
-            if(editQty > 4) return alert("每人最多只能報名 4 個數量！");
-
-            const btn = document.getElementById("btnEdit");
-            btn.innerText = "儲存中..."; btn.disabled = true;
-
-            const payload = {
-                action: "editRecord",
-                orderId: document.getElementById("editOrderId").value,
-                oldTargetClass: document.getElementById("editOldClass").value,
-                newTargetClass: document.getElementById("editClass").value,
-                newName: document.getElementById("editName").value,
-                newQuantity: editQty
-            };
+            btn.disabled = true;
 
             try {
-                let result = await sendToGas(payload);
-                alert(result.message);
-                if(result.success) { 
-                    document.getElementById("edit-section").style.display = "none"; 
-                    bgFetchMyRecords(); 
-                }
-            } catch (err) { alert("連線異常，但修改可能已完成，請重新整理確認。\n(" + err.message + ")"); }
-            btn.innerText = "儲存修改"; btn.disabled = false;
-        }
-
-        async function uploadDelayedImages() {
-            if (!checkLineStatus()) return;
-            const val = document.getElementById("myRecordsSelect").value;
-            if(!val) return;
-            const recordData = JSON.parse(val);
-            const fileInput = document.getElementById("delayedImageUpload");
-            
-            if (fileInput.files.length === 0) return alert("請選擇圖片");
-            if (fileInput.files.length > 5) return alert("最多只能上傳 5 張圖片！");
-            
-            const btn = document.getElementById("btnDelayedUpload");
-            btn.innerText = "上傳中 (這可能需要幾秒鐘)..."; btn.disabled = true;
-
-            try {
+                showStatus("⏳ 圖片處理中，請稍候... (這可能需要幾秒鐘)", "info");
+                
+                // 壓縮圖片
                 let imagesData = [];
                 for (let i = 0; i < fileInput.files.length; i++) {
                     imagesData.push({ base64: await compressImage(fileInput.files[i]) });
                 }
-                const payload = { action: "upload", orderId: recordData.orderId, targetClass: recordData.targetClass, lineName: currentLineName, images: imagesData };
-                let result = await sendToGas(payload);
-                alert(result.message);
+
+                // 發送給 GAS
+                const payload = { 
+                    action: "upload", 
+                    targetClass: targetClass, 
+                    seqNumber: seqNumber,
+                    name: name, 
+                    lineName: currentLineName,
+                    images: imagesData 
+                };
                 
-                if (result.success) clearImagePreview();
-            } catch (err) { alert("連線異常，請確認檔案是否太大或網路不穩。\n(" + err.message + ")"); }
-            
-            btn.innerText = "確認上傳"; btn.disabled = false;
-        }
+                let result = await fetch(GAS_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+                    body: JSON.stringify(payload)
+                }).then(res => res.json());
 
-        async function fetchClassList() {
-            const targetClass = document.getElementById("viewClassSelect").value;
-            const listDiv = document.getElementById("list-result");
-            
-            if (classListCache[targetClass]) {
-                renderClassTable(classListCache[targetClass]);
-                bgFetchClassList(targetClass); 
-                return;
+                if (!result.success) throw new Error(result.message);
+
+                // 切換至成功畫面
+                document.getElementById("formCard").style.display = "none";
+                document.getElementById("successCard").style.display = "block";
+
+            } catch (err) {
+                showStatus("❌ 上傳異常，請確認檔案不要過大，或網路是否穩定。", "error");
+            } finally {
+                btn.disabled = false;
             }
-
-            listDiv.innerHTML = "<p style='text-align:center; color: var(--text-muted);'>資料載入中...</p>";
-            await bgFetchClassList(targetClass);
         }
 
-        async function bgFetchClassList(targetClass) {
-            try {
-                let result = await sendToGas({ action: "getList", targetClass: targetClass });
-                if (result.success) {
-                    classListCache[targetClass] = result.list;
-                    if(document.getElementById("viewClassSelect").value === targetClass && document.getElementById('page-view').classList.contains('active')) {
-                        renderClassTable(result.list);
-                    }
-                }
-            } catch(e) {}
-        }
-
-        // ✨ 這裡將表頭和資料改為顯示「報名姓名」
-        function renderClassTable(list) {
-            const listDiv = document.getElementById("list-result");
-            let html = `<table><tr><th>序號</th><th>報名姓名</th><th>圖片數</th></tr>`;
-            if (list.length === 0) html += `<tr><td colspan="3" style="text-align:center;">無人報名</td></tr>`;
-            else list.forEach(item => { html += `<tr><td>${item.seq}</td><td>${item.name}</td><td style="text-align:center; color:var(--primary); font-weight:bold;">${item.imgCount} 張</td></tr>`; });
-            listDiv.innerHTML = html + `</table>`;
+        function resetForm() {
+            document.getElementById("inputName").value = "";
+            document.getElementById("imageUpload").value = "";
+            document.getElementById("imagePreviewContainer").innerHTML = "";
+            document.getElementById("statusText").innerText = "";
+            
+            document.getElementById("successCard").style.display = "none";
+            document.getElementById("formCard").style.display = "block";
         }
 
         function compressImage(file) {
