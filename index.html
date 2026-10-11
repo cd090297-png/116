@@ -23,7 +23,7 @@
         .form-group { margin-bottom: 15px; }
         label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 14px; color: var(--text-muted); }
         input[type="text"], input[type="number"], select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; font-size: 16px; background-color: var(--input-bg); color: var(--text); }
-        input[type="file"] { color: var(--text-muted); }
+        input[type="file"] { color: var(--text-muted); font-size: 14px; }
         button { width: 100%; background-color: var(--primary); color: white; border: none; padding: 14px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: background-color 0.2s; }
         button.btn-secondary { background-color: #E2E8F0; color: #333333; }
         button.btn-warning { background-color: #F57C00; color: white; }
@@ -37,6 +37,10 @@
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
         th { background-color: #F5F7F9; color: var(--text); }
+        
+        /* ✨ 圖片預覽區塊的樣式 */
+        .preview-container { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
+        .preview-img { width: calc(33.333% - 7px); aspect-ratio: 1; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
@@ -69,7 +73,13 @@
                     <button type="button" class="btn-secondary" onclick="forceReloadRecords()">🔄 強制重新載入</button>
                 </div>
                 <div id="upload-section" style="display:none; border-top: 1px dashed var(--border); padding-top: 20px;">
-                    <input type="file" id="delayedImageUpload" accept="image/*" multiple style="margin-bottom: 15px;">
+                    <label style="color: var(--primary);">請選擇要上傳的圖片 (最多5張)</label>
+                    <!-- ✨ 加入了 onchange 事件來觸發預覽 -->
+                    <input type="file" id="delayedImageUpload" accept="image/*" multiple style="margin-bottom: 10px;" onchange="previewImages()">
+                    
+                    <!-- ✨ 圖片預覽顯示區域 -->
+                    <div id="imagePreviewContainer" class="preview-container"></div>
+                    
                     <button type="button" id="btnDelayedUpload" onclick="uploadDelayedImages()">確認上傳</button>
                 </div>
             </div>
@@ -130,11 +140,9 @@
         let currentLineName = "未登入"; 
         let currentSource = "網頁";
         
-        // ✨ 快取變數 (存放預先載入的資料)
         let myRecordsCache = null; 
         let classListCache = {};
 
-        // 1. 啟動與預載
         async function initializeLiff() {
             try {
                 await liff.init({ liffId: LIFF_ID });
@@ -146,7 +154,6 @@
                     currentSource = liff.getOS();
                     document.getElementById("profileName").innerText = currentLineName;
                     
-                    // ✨ 抓到名稱後，立刻在背景偷偷抓資料！
                     bgFetchMyRecords();
                     bgFetchClassList("A"); 
                 }
@@ -174,12 +181,11 @@
             const titles = { 'register':'活動報名', 'upload':'補傳圖片', 'edit':'修改資料', 'view':'各班名單查詢' };
             document.getElementById('headerTitle').innerText = titles[page];
             
-            // 由於有快取，切換頁面不再強制抓取，只需顯示即可
             if(page === 'view') fetchClassList();
         }
 
         // ==========================================
-        // ✨ 背景預先載入邏輯 (加速核心)
+        // 背景預先載入邏輯
         // ==========================================
         async function bgFetchMyRecords() {
             try {
@@ -219,30 +225,63 @@
                 uploadSelect.innerHTML = '<option value="">找不到您的報名紀錄</option>';
                 editSelect.innerHTML = '<option value="">找不到您的報名紀錄</option>';
             }
-            // 重置顯示區塊
+            
+            // 重置區塊與預覽
             document.getElementById("upload-section").style.display = "none";
             document.getElementById("edit-section").style.display = "none";
+            clearImagePreview(); 
         }
 
         function handleUploadSelect() {
             const val = document.getElementById('myRecordsSelect').value;
             document.getElementById('upload-section').style.display = val ? 'block' : 'none';
-        }
-
-        function loadEditData() {
-            const idx = document.getElementById("editRecordsSelect").value;
-            if(idx === "") { document.getElementById("edit-section").style.display = "none"; return; }
-            const rec = myRecordsCache[idx];
-            document.getElementById("editOrderId").value = rec.orderId;
-            document.getElementById("editOldClass").value = rec.className.replace("班", "");
-            document.getElementById("editName").value = rec.name;
-            document.getElementById("editQty").value = rec.quantity;
-            document.getElementById("editClass").value = rec.className.replace("班", "");
-            document.getElementById("edit-section").style.display = "block";
+            clearImagePreview(); // 切換紀錄時清空舊預覽
         }
 
         // ==========================================
-        // ✨ 表單送出邏輯 (包含更新快取)
+        // ✨ 新增：圖片預覽功能
+        // ==========================================
+        function previewImages() {
+            const previewContainer = document.getElementById('imagePreviewContainer');
+            const fileInput = document.getElementById('delayedImageUpload');
+            
+            // 每次選擇新檔案時，先清空之前的預覽
+            previewContainer.innerHTML = '';
+            
+            const files = fileInput.files;
+            if (files.length === 0) return;
+            
+            if (files.length > 5) {
+                alert("提醒：最多只能上傳 5 張圖片！請重新選擇。");
+                fileInput.value = ""; // 清空選擇
+                return;
+            }
+
+            // 讀取並顯示圖片
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (!file.type.startsWith('image/')) continue; // 確保是圖片
+                
+                const img = document.createElement('img');
+                img.className = 'preview-img';
+                img.src = URL.createObjectURL(file);
+                
+                // 釋放記憶體
+                img.onload = function() {
+                    URL.revokeObjectURL(img.src);
+                }
+                
+                previewContainer.appendChild(img);
+            }
+        }
+
+        function clearImagePreview() {
+            document.getElementById("delayedImageUpload").value = "";
+            document.getElementById("imagePreviewContainer").innerHTML = "";
+        }
+
+        // ==========================================
+        // 表單送出邏輯
         // ==========================================
         async function submitRegistration() {
             if (!checkLineStatus()) return;
@@ -260,11 +299,23 @@
                 let result = await res.json();
                 if (result.success) { 
                     alert("報名成功！"); 
-                    bgFetchMyRecords(); // 成功後自動重抓資料更新快取
+                    bgFetchMyRecords(); 
                     switchPage('upload'); 
                 } else alert(result.message);
             } catch (err) { alert("網路錯誤"); }
             btn.innerText = "提交報名"; btn.disabled = false;
+        }
+
+        function loadEditData() {
+            const idx = document.getElementById("editRecordsSelect").value;
+            if(idx === "") { document.getElementById("edit-section").style.display = "none"; return; }
+            const rec = myRecordsCache[idx];
+            document.getElementById("editOrderId").value = rec.orderId;
+            document.getElementById("editOldClass").value = rec.className.replace("班", "");
+            document.getElementById("editName").value = rec.name;
+            document.getElementById("editQty").value = rec.quantity;
+            document.getElementById("editClass").value = rec.className.replace("班", "");
+            document.getElementById("edit-section").style.display = "block";
         }
 
         async function submitEdit() {
@@ -290,7 +341,7 @@
                 alert(result.message);
                 if(result.success) { 
                     document.getElementById("edit-section").style.display = "none"; 
-                    bgFetchMyRecords(); // 自動更新快取
+                    bgFetchMyRecords(); 
                 }
             } catch (err) { alert("修改發生錯誤"); }
             btn.innerText = "儲存修改"; btn.disabled = false;
@@ -302,7 +353,10 @@
             if(!val) return;
             const recordData = JSON.parse(val);
             const fileInput = document.getElementById("delayedImageUpload");
+            
             if (fileInput.files.length === 0) return alert("請選擇圖片");
+            if (fileInput.files.length > 5) return alert("最多只能上傳 5 張圖片！");
+            
             const btn = document.getElementById("btnDelayedUpload");
             btn.innerText = "上傳中 (這可能需要幾秒鐘)..."; btn.disabled = true;
 
@@ -315,19 +369,22 @@
                 let res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
                 let result = await res.json();
                 alert(result.message);
+                
+                if (result.success) {
+                    clearImagePreview(); // 上傳成功後清空預覽和選擇
+                }
             } catch (err) { alert("上傳失敗"); }
+            
             btn.innerText = "確認上傳"; btn.disabled = false;
-            document.getElementById("delayedImageUpload").value = ""; // 清空選擇的檔案
         }
 
         // ==========================================
-        // ✨ 各班名單快取邏輯
+        // 各班名單快取邏輯
         // ==========================================
         async function fetchClassList() {
             const targetClass = document.getElementById("viewClassSelect").value;
             const listDiv = document.getElementById("list-result");
             
-            // 如果已經抓過該班級，直接用快取秒顯，並在背景偷偷更新
             if (classListCache[targetClass]) {
                 renderClassTable(classListCache[targetClass]);
                 bgFetchClassList(targetClass); 
@@ -344,7 +401,6 @@
                 let result = await res.json();
                 if (result.success) {
                     classListCache[targetClass] = result.list;
-                    // 如果目前停留在該班級，才重新渲染表格
                     if(document.getElementById("viewClassSelect").value === targetClass && document.getElementById('page-view').classList.contains('active')) {
                         renderClassTable(result.list);
                     }
