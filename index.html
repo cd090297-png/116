@@ -58,16 +58,7 @@
                 </select>
             </div>
 
-            <div class="form-group">
-                <label>您的報名序號</label>
-                <select id="selectSeq">
-                    <option value="1">1 號</option><option value="2">2 號</option><option value="3">3 號</option><option value="4">4 號</option>
-                    <option value="5">5 號</option><option value="6">6 號</option><option value="7">7 號</option><option value="8">8 號</option>
-                    <option value="9">9 號</option><option value="10">10 號</option><option value="11">11 號</option><option value="12">12 號</option>
-                    <option value="13">13 號</option><option value="14">14 號</option><option value="15">15 號</option><option value="16">16 號</option>
-                    <option value="17">17 號</option><option value="18">18 號</option><option value="19">19 號</option><option value="20">20 號</option>
-                </select>
-            </div>
+            <!-- ⚠️ 已刪除：報名序號的下拉選單區塊 -->
 
             <div class="form-group">
                 <label>報名姓名</label>
@@ -151,7 +142,7 @@
         async function submitForm() {
             const name = document.getElementById("inputName").value.trim();
             const targetClass = document.getElementById("selectClass").value;
-            const seqNumber = document.getElementById("selectSeq").value;
+            // ⚠️ 已刪除：抓取序號的程式碼
             const fileInput = document.getElementById("imageUpload");
             
             if(!name) return showStatus("⚠️ 請輸入報名姓名！", "error");
@@ -173,7 +164,7 @@
                 const payload = { 
                     action: "upload", 
                     targetClass: targetClass, 
-                    seqNumber: seqNumber,
+                    // ⚠️ 已刪除：傳送 seqNumber
                     name: name, 
                     lineName: currentLineName,
                     images: imagesData 
