@@ -31,8 +31,10 @@
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
         th { background-color: #F5F7F9; color: var(--text); }
-        .preview-container { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
-        .preview-img { width: calc(33.333% - 7px); aspect-ratio: 1; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        /* ✨ 圖片預覽區塊改為滿版向下排列 */
+        .preview-container { display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px; }
+        .preview-img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
@@ -130,11 +132,10 @@
         let myRecordsCache = null; 
         let classListCache = {};
 
-        // ✨ 統一的 Fetch 發送函數 (加入防 CORS 阻擋設定)
         async function sendToGas(payload) {
             return await fetch(GAS_URL, {
                 method: "POST",
-                headers: { "Content-Type": "text/plain;charset=utf-8" }, // 避免 iOS 阻擋
+                headers: { "Content-Type": "text/plain;charset=utf-8" }, 
                 body: JSON.stringify(payload)
             }).then(res => res.json());
         }
@@ -373,11 +374,12 @@
             } catch(e) {}
         }
 
+        // ✨ 這裡將表頭和資料改為顯示「報名姓名」
         function renderClassTable(list) {
             const listDiv = document.getElementById("list-result");
-            let html = `<table><tr><th>序號</th><th>LINE名稱</th><th>圖片數</th></tr>`;
+            let html = `<table><tr><th>序號</th><th>報名姓名</th><th>圖片數</th></tr>`;
             if (list.length === 0) html += `<tr><td colspan="3" style="text-align:center;">無人報名</td></tr>`;
-            else list.forEach(item => { html += `<tr><td>${item.seq}</td><td>${item.lineName}</td><td style="text-align:center; color:var(--primary); font-weight:bold;">${item.imgCount} 張</td></tr>`; });
+            else list.forEach(item => { html += `<tr><td>${item.seq}</td><td>${item.name}</td><td style="text-align:center; color:var(--primary); font-weight:bold;">${item.imgCount} 張</td></tr>`; });
             listDiv.innerHTML = html + `</table>`;
         }
 
