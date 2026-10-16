@@ -67,7 +67,7 @@
             </div>
 
             <div class="form-group">
-                <label>上傳卦紙 (最多 4 張)</label>
+                <label>上傳卦紙 (最多 3 張)</label>
                 <input type="file" id="imageUpload" accept="image/*" multiple onchange="previewImages()">
                 <div id="imagePreviewContainer" class="preview-container"></div>
             </div>
@@ -142,7 +142,7 @@
             const files = fileInput.files;
             if (files.length === 0) return;
             if (files.length > 5) {
-                showStatus("⚠️ 最多只能上傳 4 張圖片！請重新選擇。", "error");
+                showStatus("⚠️ 最多只能上傳 3 張圖片！請重新選擇。", "error");
                 fileInput.value = ""; 
                 return;
             }
